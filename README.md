@@ -91,26 +91,3 @@ messages = [
 "Licence Informatique",
 "Découvrons Python"
 ]
-
-Faire une nouvelle capture d'écran après modification.
-
-Questions
-Question 1
-
-Quelle commande permet de vérifier que Python est correctement installé ?
-
-Question 2
-
-À quoi sert la bibliothèque tkinter ?
-
-Question 3
-
-Quelle touche permet de quitter l'application ?
-
-Question 4
-
-Quelle modification avez-vous réalisée dans le programme ?
-
-Question 5
-
-Quelle amélioration souhaiteriez-vous ajouter au projet ?
