@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ateliers IA — Sciences &amp; SVT</title>
+<!-- Polices facultatives : sans connexion, la page retombe sur les polices du système -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@500;700;800&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* Salle d'atelier — même format que le « Parcours Cyber & IA » : hub → salles → portes → code de validation */
+  :root{
+    --bg:#070a10; --bg2:#0b111c; --surface:#0e1726; --surface2:#121d30;
+    --line:#1d2a40; --line2:#27384f;
+    --fg:#e8eff7; --muted:#8696ac; --faint:#5e6e85;
+    --blue:#2e9bff; --green:#34d8a0; --gold:#ffcb2e;
+    --danger:#ff5366; --warn:#ffb020;
+    --grad:linear-gradient(120deg,#2e9bff 0%,#34d8a0 100%);
+    --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+    --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --disp:"Oxanium","IBM Plex Sans",system-ui,sans-serif;
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);line-height:1.55;
+    background-image:radial-gradient(900px 500px at 85% -5%,rgba(46,155,255,.10),transparent 60%),radial-gradient(800px 500px at 0% 105%,rgba(52,216,160,.09),transparent 60%);
+    background-attachment:fixed;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 16px 64px}
+  a{color:var(--blue)}
+  h1,h2,h3{font-family:var(--disp);text-wrap:balance;line-height:1.15;margin:0}
+  .mono{font-family:var(--mono)}
+  [hidden]{display:none!important}
+
+  header.bar{position:sticky;top:0;z-index:20;background:rgba(8,13,22,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .bar .in{max-width:920px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:10px 16px}
+  .logo{width:30px;height:30px;border-radius:7px;flex:0 0 auto;display:grid;place-items:center;background:var(--grad);color:#041018;font-family:var(--disp);font-weight:800;font-size:12px}
+  .brand{font-family:var(--disp);font-weight:700;letter-spacing:.3px;font-size:14px}
+  .brand small{display:block;font-family:var(--mono);font-weight:400;font-size:10px;color:var(--faint);letter-spacing:1.5px}
+  .bar .prog{margin-left:auto;display:flex;align-items:center;gap:9px;min-width:0}
+  .prog .txt{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap}
+  .track{width:110px;max-width:26vw;height:7px;border-radius:99px;background:#101a2b;overflow:hidden;border:1px solid var(--line)}
+  .track i{display:block;height:100%;width:0;background:var(--grad);transition:width .5s ease}
+  .tgl{font-family:var(--mono);font-size:11px;color:var(--muted);background:transparent;border:1px solid var(--line2);border-radius:8px;padding:6px 9px;cursor:pointer}
+  .tgl[aria-pressed="true"]{color:#041018;background:var(--grad);border-color:transparent;font-weight:700}
+
+  .hero{padding:30px 0 8px;display:flex;gap:22px;align-items:center}
+  .herotext{flex:1;min-width:0}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--green);margin:0 0 13px}
+  .hero h1{font-size:clamp(30px,7vw,50px);font-weight:800;letter-spacing:-.5px}
+  .hero h1 .g{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lede{color:var(--muted);max-width:62ch;margin-top:13px;font-size:15.5px}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .chip{font-family:var(--mono);font-size:11px;letter-spacing:.5px;padding:5px 11px;border-radius:99px;border:1px solid var(--line2);background:var(--surface);color:var(--muted)}
+  .chip b{color:var(--fg);font-weight:600}
+
+  /* feu tricolore animé */
+  .feuart{flex:0 0 auto;width:84px;padding:12px 0;border-radius:22px;background:#060b14;border:1px solid var(--line2);display:grid;gap:10px;justify-items:center;box-shadow:0 18px 40px -22px rgba(0,0,0,.9)}
+  .feuart i{width:46px;height:46px;border-radius:50%;opacity:.22;transition:opacity .3s, box-shadow .3s}
+  .feuart .r{background:var(--danger)} .feuart .o{background:var(--warn)} .feuart .v{background:var(--green)}
+  .feuart.cycle .r{animation:lamp 6s infinite 0s} .feuart.cycle .o{animation:lamp 6s infinite 2s} .feuart.cycle .v{animation:lamp 6s infinite 4s}
+  .feuart i.on{opacity:1;box-shadow:0 0 26px currentColor}
+  .feuart .r{color:var(--danger)} .feuart .o{color:var(--warn)} .feuart .v{color:var(--green)}
+  @keyframes lamp{0%,28%{opacity:1;box-shadow:0 0 26px currentColor}34%,100%{opacity:.22;box-shadow:none}}
+
+  .partners{margin-top:20px;border:1px solid var(--line);border-radius:13px;background:var(--surface);padding:12px 16px;display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center}
+  .partners .t{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--faint)}
+  .partners .nm{font-family:var(--disp);font-weight:600;font-size:13px}
+
+  .section-h{font-family:var(--disp);font-weight:800;font-size:clamp(20px,4.5vw,26px);margin:28px 0 4px}
+  .section-s{color:var(--muted);font-size:14px;margin:0 0 16px;max-width:64ch}
+
+  .hubgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  .gc{border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:16px;cursor:pointer;text-align:left;color:inherit;font:inherit;display:flex;flex-direction:column;gap:8px;transition:transform .2s,border-color .2s, box-shadow .2s}
+  .gc:hover,.gc:focus-visible{transform:translateY(-3px);border-color:var(--blue);box-shadow:0 18px 40px -26px rgba(46,155,255,.8);outline:none}
+  .gc .emo{font-size:30px;line-height:1}
+  .gc .k{font-family:var(--mono);font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--faint)}
+  .gc h3{font-size:17px}
+  .gc p{margin:0;color:var(--muted);font-size:13.5px;flex:1}
+  .gc .pstate{font-family:var(--mono);font-size:11px;color:var(--blue)}
+  .gc.done{border-color:rgba(52,216,160,.45)} .gc.done .pstate{color:var(--green)}
+  .mini{height:5px;border-radius:99px;background:#101a2b;overflow:hidden}
+  .mini i{display:block;height:100%;background:var(--grad);width:0;transition:width .5s}
+
+  .playbar{display:flex;align-items:center;gap:12px;margin-top:22px;flex-wrap:wrap}
+  .playbar h2{font-size:clamp(20px,5vw,28px)}
+  .playbar .pt{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:auto}
+  .rooms{margin-top:18px;display:flex;flex-direction:column;gap:16px}
+  .door{border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden;transition:border-color .3s, box-shadow .3s}
+  .door.locked{opacity:.5}
+  .door.active{border-color:var(--line2);box-shadow:0 0 0 1px rgba(46,155,255,.25),0 18px 40px -22px rgba(0,0,0,.8);animation:rise .45s ease}
+  .door.solved{border-color:rgba(52,216,160,.3)}
+  @keyframes rise{from{transform:translateY(10px);opacity:.3}to{transform:none;opacity:1}}
+  .dhead{display:flex;align-items:center;gap:13px;padding:15px 16px}
+  .badge{width:38px;height:38px;flex:0 0 auto;border-radius:9px;display:grid;place-items:center;font-family:var(--mono);font-weight:700;font-size:14px;border:1px solid var(--line2);background:var(--bg2);color:var(--muted)}
+  .door.active .badge,.door.solved .badge{background:var(--grad);color:#04141f;border-color:transparent}
+  .dtitle{min-width:0;flex:1}
+  .dtitle .k{font-family:var(--mono);font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--faint)}
+  .dtitle h2{font-size:17px}
+  .dstate{flex:0 0 auto;font-family:var(--mono);font-size:11px;padding:4px 9px;border-radius:7px}
+  .st-ok{color:var(--green);border:1px solid rgba(52,216,160,.35)} .st-open{color:var(--blue)} .st-lock{color:var(--faint);border:1px solid var(--line)}
+  .dbody{border-top:1px solid var(--line);padding:16px}
+  .scene{color:#cdd9e8;font-size:15.5px}
+  .scene p{margin:0 0 11px}
+  .evi{border:1px solid var(--line2);border-radius:10px;background:#060b14;margin:13px 0;overflow:hidden}
+  .evi .top{display:flex;align-items:center;gap:7px;padding:8px 12px;border-bottom:1px solid var(--line);background:#0a1120}
+  .evi .dot{width:9px;height:9px;border-radius:50%;background:#2a3550}
+  .evi .label{font-family:var(--mono);font-size:11px;color:var(--faint);margin-left:4px}
+  .evi pre{margin:0;padding:13px 14px;font-family:var(--mono);font-size:13.5px;line-height:1.9;color:#b9c6d8;white-space:pre-wrap;word-break:break-word}
+  .seg{cursor:pointer;border-radius:4px;padding:1px 0;transition:background .2s,color .2s}
+  .seg:hover{background:rgba(46,155,255,.14)}
+  .seg.miss{animation:shake .4s}
+  .seg.perso{background:rgba(255,176,32,.2);color:var(--warn);font-weight:600}
+  .seg.sens{background:rgba(255,83,102,.2);color:var(--danger);font-weight:600}
+  .seg.secret{background:rgba(46,155,255,.22);color:var(--blue);font-weight:600}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 10px}
+  .lg{font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:99px;border:1px solid var(--line2)}
+  .lg.perso{color:var(--warn);border-color:rgba(255,176,32,.45)} .lg.sens{color:var(--danger);border-color:rgba(255,83,102,.45)} .lg.secret{color:var(--blue);border-color:rgba(46,155,255,.45)}
+  .foundlist{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:7px}
+  .foundlist li{border:1px solid var(--line);border-radius:9px;background:var(--bg2);padding:9px 12px;font-size:13.5px;animation:rise .35s ease}
+  .foundlist b{font-family:var(--mono);font-size:11px;letter-spacing:.5px;text-transform:uppercase}
+  .counter{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+  .counter b{color:var(--green);font-size:16px}
+
+  details.learn{border:1px solid var(--line);border-radius:10px;background:var(--bg2);margin:13px 0;overflow:hidden}
+  details.learn summary{cursor:pointer;list-style:none;padding:11px 14px;font-family:var(--disp);font-weight:600;font-size:13.5px;color:var(--blue)}
+  details.learn summary::before{content:"▸ "} details.learn[open] summary::before{content:"▾ "}
+  details.learn .c{padding:0 14px 13px;font-size:14px;color:#cdd9e8}
+  details.learn table{width:100%;border-collapse:collapse;font-size:13px}
+  details.learn td,details.learn th{border-top:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+  details.learn th{font-family:var(--mono);font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--faint);border-top:none}
+
+  .ask{font-family:var(--disp);font-weight:600;font-size:16px;margin:16px 0 4px}
+  .assist{color:var(--muted);font-size:13px;margin:0 0 12px}
+  .inrow{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:8px}
+  .inrow .pre{font-family:var(--mono);color:var(--green);font-size:15px}
+  .code,textarea.code,select.code{flex:1;min-width:160px;font-family:var(--mono);font-size:14px;color:var(--fg);background:#060b14;border:1px solid var(--line2);border-radius:9px;padding:11px 13px}
+  textarea.code{width:100%;min-height:110px;resize:vertical;font-family:var(--body);line-height:1.5}
+  .code:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(46,155,255,.18)}
+  .btn{font-family:var(--disp);font-weight:700;border:none;border-radius:9px;cursor:pointer;padding:11px 18px;background:var(--grad);color:#041018;font-size:14px}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:transparent;border:1px solid var(--line2);color:var(--muted);font-weight:600;padding:10px 14px;font-size:13px}
+  .btn.ghost:hover{color:var(--fg);border-color:var(--blue)}
+  .fb{font-family:var(--mono);font-size:12.5px;margin-top:10px;min-height:1em}
+  .fb.no{color:var(--danger)} .fb.hintline{color:var(--warn)} .fb.ok{color:var(--green)}
+  .wrong{border-color:var(--danger)!important;animation:shake .4s}
+  .right{border-color:var(--green)!important}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+  .feux{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:8px}
+  .feu{font-family:var(--disp);font-weight:700;font-size:15px;border-radius:12px;border:2px solid var(--line2);background:#060b14;color:var(--fg);padding:14px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:transform .15s,border-color .2s,box-shadow .2s}
+  .feu i{width:34px;height:34px;border-radius:50%;display:block}
+  .feu small{font-family:var(--body);font-weight:400;font-size:12.5px;color:var(--muted)}
+  .feu.v i{background:var(--green)} .feu.o i{background:var(--warn)} .feu.r i{background:var(--danger)}
+  .feu:hover,.feu:focus-visible{transform:translateY(-2px);outline:none}
+  .feu.v:hover,.feu.v:focus-visible{border-color:var(--green);box-shadow:0 0 22px -6px var(--green)}
+  .feu.o:hover,.feu.o:focus-visible{border-color:var(--warn);box-shadow:0 0 22px -6px var(--warn)}
+  .feu.r:hover,.feu.r:focus-visible{border-color:var(--danger);box-shadow:0 0 22px -6px var(--danger)}
+  .verdict{display:inline-flex;align-items:center;gap:9px;font-family:var(--disp);font-weight:700;border-radius:99px;padding:7px 14px;margin-top:6px;animation:pop .4s ease}
+  .verdict i{width:14px;height:14px;border-radius:50%;display:block}
+  .verdict.v{color:var(--green);border:1px solid rgba(52,216,160,.5);background:rgba(52,216,160,.08)} .verdict.v i{background:var(--green)}
+  .verdict.o{color:var(--warn);border:1px solid rgba(255,176,32,.5);background:rgba(255,176,32,.08)} .verdict.o i{background:var(--warn)}
+  .verdict.r{color:var(--danger);border:1px solid rgba(255,83,102,.5);background:rgba(255,83,102,.08)} .verdict.r i{background:var(--danger)}
+  @keyframes pop{0%{transform:scale(.8);opacity:0}70%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
+
+  .flag{margin-top:14px;border:1px dashed rgba(52,216,160,.45);background:rgba(52,216,160,.07);border-radius:10px;padding:13px 14px}
+  .flag .fl{font-family:var(--mono);font-size:10.5px;letter-spacing:1.5px;color:var(--green);text-transform:uppercase}
+  .flag code{font-family:var(--mono);font-size:14px;color:var(--fg);word-break:break-all}
+  .lesson{margin-top:11px;font-size:14.5px;color:#cdd9e8;border-left:2px solid var(--line2);padding-left:12px}
+  .lesson b{color:var(--green)}
+  .lesson.o b{color:var(--warn)} .lesson.r b{color:var(--danger)}
+  .classbox{margin-top:12px;border:1px solid rgba(255,203,46,.3);background:rgba(255,203,46,.06);border-radius:10px;padding:12px 14px}
+  .classbox .t{font-family:var(--mono);font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold)}
+  .classbox p{margin:6px 0 0;font-size:14px;color:#cdd9e8}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+  .fld{display:flex;flex-direction:column;gap:6px}
+  .fld.full{grid-column:1/-1}
+  .fld label{font-family:var(--mono);font-size:11px;letter-spacing:.5px;color:var(--muted)}
+  .fld .code{min-width:0;font-family:var(--body)}
+  .checks{display:grid;gap:9px;margin-top:6px}
+  .ck{display:flex;gap:11px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;background:var(--bg2);padding:11px 13px;cursor:pointer;font-size:14.5px}
+  .ck input{width:20px;height:20px;margin-top:1px;accent-color:#34d8a0;flex:0 0 auto}
+  .ck.on{border-color:rgba(52,216,160,.45)}
+
+  .modwin{margin-top:26px;border:1px solid rgba(52,216,160,.4);border-radius:16px;background:linear-gradient(180deg,rgba(52,216,160,.08),var(--surface));padding:26px 20px;text-align:center;animation:rise .5s ease}
+  .modwin h2{font-size:clamp(20px,5vw,28px);background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .modwin p{color:var(--muted);max-width:56ch;margin:10px auto 0;font-size:14px}
+  .reflex{margin:18px auto 0;max-width:560px;display:grid;gap:8px;text-align:left}
+  .reflex .r{display:flex;gap:11px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;background:var(--bg2);padding:11px 13px}
+  .reflex .r b{font-family:var(--mono);color:var(--green)}
+  .modcta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+
+  footer{margin-top:34px;border-top:1px solid var(--line);padding-top:16px;color:var(--faint);font-size:12.5px}
+  footer b{color:var(--muted)}
+
+  /* mode projection : plus gros, pour le vidéoprojecteur */
+  body.proj .wrap,body.proj .bar .in{max-width:1180px}
+  body.proj .scene{font-size:22px} body.proj .ask{font-size:21px} body.proj .feu{font-size:19px;padding:20px 10px}
+  body.proj .lesson,body.proj .classbox p{font-size:18px} body.proj .evi pre{font-size:17px} body.proj .dtitle h2{font-size:22px}
+
+  #printFiche{display:none}
+  @media(max-width:760px){.hubgrid{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.hero{flex-direction:column-reverse;align-items:flex-start}.feuart{width:auto;padding:8px 14px;grid-auto-flow:column}.feuart i{width:30px;height:30px}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  @media print{
+    body{background:#fff;color:#000}
+    header.bar,main,footer{display:none!important}
+    #printFiche{display:block;font-family:Calibri,Arial,sans-serif;color:#000;padding:8mm}
+    #printFiche h1{font-family:inherit;font-size:20pt;color:#00334D;margin:0 0 2mm}
+    #printFiche .sub{color:#4B7D8F;font-style:italic;margin:0 0 5mm}
+    #printFiche table{width:100%;border-collapse:collapse;font-size:11pt}
+    #printFiche td,#printFiche th{border:1px solid #9aa7b2;padding:2.2mm 3mm;text-align:left;vertical-align:top}
+    #printFiche th{width:34%;background:#EEF2F5;color:#00334D}
+    #printFiche h2{font-family:inherit;font-size:13pt;color:#00334D;margin:6mm 0 2mm}
+    #printFiche ul{list-style:none;padding:0;margin:0;font-size:11pt}
+    #printFiche li{margin:1.2mm 0}
+    #printFiche .foot{margin-top:6mm;font-size:9pt;color:#555}
+  }
+</style>
+</head>
+<body>
+<header class="bar"><div class="in">
+  <div class="logo" aria-hidden="true">IA</div>
+  <div class="brand">Ateliers IA · Sciences &amp; SVT<small>AXE 04 · ATELIERS 05 ET 06</small></div>
+  <div class="prog"><span class="txt" id="progtxt">0 / 18</span><div class="track" aria-hidden="true"><i id="progbar"></i></div>
+    <button class="tgl" id="projBtn" aria-pressed="false" title="Agrandir pour le vidéoprojecteur">Projection</button></div>
+</div></header>
+
+<main class="wrap">
+  <!-- ACCUEIL -->
+  <section id="home">
+    <div class="hero">
+      <div class="herotext">
+        <p class="eyebrow">Enjeux éthiques et risques de l'IA</p>
+        <h1>Avant de coller, <span class="g">je trie.</span></h1>
+        <p class="lede">Trois salles à ouvrir en binôme : un quiz « feu tricolore », un prompt à nettoyer, puis votre propre activité de classe, relue « en sécurité ». Chaque porte ouverte donne un code de validation.</p>
+        <div class="meta">
+          <span class="chip">⏱ <b>45 min</b></span><span class="chip">👥 <b>en binôme</b></span><span class="chip">🧪 <b>données fictives</b></span><span class="chip">📴 <b>fonctionne hors connexion</b></span>
+        </div>
+      </div>
+      <div class="feuart cycle" aria-hidden="true"><i class="r"></i><i class="o"></i><i class="v"></i></div>
+    </div>
+    <div class="partners"><span class="t">Une action</span><span class="nm">Master ACAI · Université de Guyane</span><span class="nm">Maison pour la science en Guyane</span><span class="nm">HACK'MAZONE</span></div>
+
+    <h2 class="section-h">Les trois salles</h2>
+    <p class="section-s">Ouvrez-les dans l'ordre ou au choix de l'animateur. La progression est enregistrée sur cet appareil.</p>
+    <div class="hubgrid" id="hubgrid"></div>
+
+    <div class="modwin" id="allwin" hidden>
+      <h2>🎓 Atelier terminé</h2>
+      <p>Quatre réflexes à emporter en classe, un par point du programme.</p>
+      <div class="reflex">
+        <div class="r"><b>1</b><span>Avant de coller, <b style="font-family:inherit;color:var(--fg)">je trie.</b></span></div>
+        <div class="r"><b>2</b><span>Avant de croire, <b style="font-family:inherit;color:var(--fg)">je vérifie.</b></span></div>
+        <div class="r"><b>3</b><span>Avant de donner un devoir, <b style="font-family:inherit;color:var(--fg)">je dis la règle.</b></span></div>
+        <div class="r"><b>4</b><span>Avant d'obéir à un message, <b style="font-family:inherit;color:var(--fg)">je rappelle.</b></span></div>
+      </div>
+      <div class="flag" style="max-width:560px;margin:16px auto 0;text-align:left"><div class="fl">// code final</div><code>ACAI{QUATRE_REFLEXES_EN_CLASSE}</code></div>
+    </div>
+    <div class="modcta"><button class="btn ghost" id="wipeBtn">Réinitialiser la progression</button></div>
+  </section>
+
+  <!-- SALLE -->
+  <section id="play" hidden>
+    <div class="playbar">
+      <button class="btn ghost" id="playBack">← Les salles</button>
+      <h2 id="playtitle"></h2>
+      <span class="pt" id="playtag"></span>
+    </div>
+    <p class="section-s" id="playintro" style="margin-top:10px"></p>
+    <div class="rooms" id="rooms"></div>
+    <div class="modwin" id="modwin" hidden>
+      <h2 id="modtitle"></h2>
+      <p id="modtext"></p>
+      <div class="reflex" id="modreflex"></div>
+      <div class="modcta"><button class="btn" id="modnext"></button><button class="btn ghost" id="modback">← Les salles</button></div>
+    </div>
+  </section>
+
+  <footer>
+    <b>Repères.</b> Cadre d'usage de l'IA en éducation (ministère de l'Éducation nationale, juin 2025) · CNIL, « Enseignant : comment utiliser un système d'IA dans le cadre de vos missions ? » (20 juin 2025). Toutes les situations et toutes les données de cette page sont fictives.
+  </footer>
+</main>
+
+<div id="printFiche"></div>
+
+<script>
+/* ============ DONNÉES ============ */
+const COL={v:{n:"Vert",l:"Je peux",c:"v"},o:{n:"Orange",l:"Sous conditions",c:"o"},r:{n:"Rouge",l:"Jamais",c:"r"}};
+
+const QUIZ=[
+ {t:"Des idées de TP",s:`Je demande à une IA grand public dix idées de TP sur la germination pour des CM2.`,a:"v",
+  hint:`Cherchez une donnée d'élève dans la demande. Y en a-t-il une ?`,
+  rule:`<b>Je peux.</b> Aucune donnée personnelle : la demande ne contient que du publiable. Je relis et j'adapte avant la classe.`,
+  cls:`Programme officiel, notion de cours, idée de TP ou de sortie : tout cela peut aller dans n'importe quelle IA, à condition de vérifier la réponse.`},
+ {t:"Les appréciations",s:`Je colle les appréciations de ma classe, avec les noms, dans mon compte IA personnel pour les reformuler.`,a:"r",
+  hint:`À qui appartiennent ces informations, et où partent-elles ?`,
+  rule:`<b>Jamais.</b> Ce sont des données personnelles d'élèves dans une IA grand public : exclu par le cadre d'usage et par la CNIL.`,
+  cls:`Même chose pour une copie, un compte rendu de TP nominatif ou une liste de classe.`},
+ {t:"« Élève A, élève B »",s:`Même demande, en remplaçant les noms par « élève A », « élève B »… mais en citant le collège et la classe.`,a:"o",
+  hint:`Sans le nom, peut-on encore reconnaître quelqu'un ?`,
+  rule:`<b>Sous conditions.</b> L'établissement, la classe et les détails peuvent encore identifier un élève. Je retire aussi le contexte, ou je passe par un outil validé par l'institution.`,
+  cls:`École + classe + date du TP suffisent souvent à retrouver l'élève.`},
+ {t:"La démonstration",s:`Je montre à mes CM2, sur mon écran, comment une IA décrit le cycle de l'eau… et se trompe.`,a:"v",
+  hint:`Qui manipule l'outil : l'enseignant ou les élèves ?`,
+  rule:`<b>Je peux.</b> Les élèves découvrent la notion sans manipuler l'outil : c'est la règle de l'école primaire.`,
+  cls:`En cycle 3 : démonstration sur l'écran de l'enseignant, ou activité débranchée (la clé de détermination est déjà un arbre de décision).`},
+ {t:"Le compte pour l'exposé",s:`En 6e, je demande aux élèves de créer un compte sur une IA grand public pour préparer un exposé sur les volcans.`,a:"r",
+  hint:`Deux règles sont en jeu : le niveau de classe et le compte personnel.`,
+  rule:`<b>Jamais.</b> Les élèves n'utilisent une IA générative qu'à partir de la 4e, et aucun personnel ne peut leur imposer un compte personnel sur un service grand public.`,
+  cls:`À partir de la 4e : usage en classe, encadré et expliqué par l'enseignant, sans compte personnel.`},
+ {t:"Le compte rendu à la maison",s:`Je donne un compte rendu de TP à rédiger à la maison, sans rien dire sur l'IA.`,a:"o",
+  hint:`L'élève sait-il ce qui est permis ?`,
+  rule:`<b>Sous conditions.</b> Sans règle explicite, l'élève ne sait pas ce qui est permis. J'annonce le feu du devoir : rouge, orange ou vert.`,
+  cls:`Réflexe : avant de donner un devoir, je dis la règle.`},
+ {t:"Le détecteur",s:`Je passe un exposé dans un détecteur d'IA et je mets zéro parce que le score est élevé.`,a:"r",
+  hint:`Qui décide de la note : l'outil ou l'enseignant ?`,
+  rule:`<b>Jamais.</b> Les détecteurs sont déconseillés car peu fiables ; pas de note ni de sanction sur la seule réponse d'un outil.`,
+  cls:`On ne prouve pas la triche avec un outil : on fait expliquer le travail à l'oral.`},
+ {t:"Le QCM tout prêt",s:`Je fais générer un QCM sur la digestion avec son corrigé et je le distribue tel quel.`,a:"o",
+  hint:`Une IA peut se tromper avec aplomb. Que manque-t-il avant de distribuer ?`,
+  rule:`<b>Sous conditions.</b> Possible après vérification de chaque réponse : l'enseignant reste responsable du contenu.`,
+  cls:`Réflexe : avant de croire, je vérifie (programme, Éduscol, manuel).`},
+ {t:"Le PAI",s:`Je donne à l'IA le PAI d'un élève allergique pour adapter un TP.`,a:"r",
+  hint:`De quelle catégorie de données s'agit-il ?`,
+  rule:`<b>Jamais.</b> C'est une donnée de santé. Je décris le besoin sans l'élève : « adapte ce TP pour un élève allergique au latex ».`,
+  cls:`Santé, handicap, mesures prises sur le corps d'un élève nommé : la catégorie la plus protégée.`},
+ {t:"Les photos de la sortie",s:`Je téléverse les photos de la sortie en forêt, où l'on reconnaît les élèves, pour créer une affiche.`,a:"r",
+  hint:`Un visage est-il une donnée personnelle ?`,
+  rule:`<b>Jamais.</b> Des visages d'enfants sont des données personnelles ; c'est aussi la matière première des hypertrucages.`,
+  cls:`Pour l'affiche : photos de paysages, de plantes, de traces… sans élève reconnaissable.`},
+ {t:"Les pouls anonymes",s:`Je colle dans une IA le tableau des pouls mesurés en TP : ni nom, ni classe, ni établissement.`,a:"v",
+  hint:`Comparez avec la situation « élève A, élève B ». Qu'est-ce qui a disparu ?`,
+  rule:`<b>Je peux.</b> Des statistiques anonymisées sont publiables. Je vérifie qu'aucun détail ne permet de reconnaître un élève.`,
+  cls:`La même mesure, avec le nom de l'élève, devient une donnée de santé.`},
+ {t:"Le message vocal",s:`Je reçois un message vocal du chef d'établissement : « Envoie-moi vite ton code de connexion. »`,a:"r",
+  hint:`Une voix prouve-t-elle encore l'identité ?`,
+  rule:`<b>Jamais.</b> Une voix se clone. Je rappelle par un canal déjà connu et je ne transmets jamais un code.`,
+  cls:`Réflexe : avant d'obéir à un message, je rappelle.`}
+];
+
+const SEGS=[
+ {t:"Bonjour, je suis professeure de SVT au "},
+ {t:"collège des Colibris, à Sainte-Fiction",k:"perso",n:"Identification indirecte",d:"L'établissement, la matière et la classe suffisent à retrouver l'élève. → Généraliser : « un élève de 5e »."},
+ {t:". Rédige un mot pour les parents de "},
+ {t:"Lucas M., né le 12 mars 2014, en 5e B",k:"perso",n:"Donnée personnelle",d:"Identifie directement un mineur. → Supprimer."},
+ {t:". Mardi, pendant le TP sur l'effort physique, "},
+ {t:"son pouls est monté à 190 et il a fait un malaise",k:"sens",n:"Donnée de santé",d:"Mesure prise sur le corps d'un élève nommé. → Ne jamais saisir."},
+ {t:". "},
+ {t:"Il est asthmatique (PAI)",k:"sens",n:"Donnée de santé",d:"Catégorie la plus protégée. → Ne jamais saisir."},
+ {t:" et "},
+ {t:"ses parents sont en instance de divorce",k:"sens",n:"Vie privée de tiers",d:"Information confidentielle sur la famille. → Supprimer."},
+ {t:". Voici le numéro de sa mère : "},
+ {t:"0694 00 00 00",k:"perso",n:"Donnée personnelle d'un tiers",d:"Ouvre la voie au démarchage et à l'usurpation. → Supprimer."},
+ {t:". Rappelle aussi sa note : "},
+ {t:"6/20 au dernier contrôle",k:"perso",n:"Donnée scolaire nominative",d:"Inutile à la demande : principe de minimisation. → Supprimer."},
+ {t:". Pour la sortie en forêt de jeudi, la liste est dans l'ENT : "},
+ {t:"mon identifiant est m.dupont, mon mot de passe Soleil973!",k:"secret",n:"Secret d'authentification",d:"Donne le contrôle du compte. → Ne jamais saisir ; changer le mot de passe."}
+];
+const TARGETS=SEGS.map((s,i)=>s.k?i:-1).filter(i=>i>=0);
+const KLBL={perso:"Personnel",sens:"Sensible",secret:"Secret"};
+const RISKY=[[/lucas/,"le prénom de l'élève"],[/colibris/,"le nom de l'établissement"],[/sainte[- ]fiction/,"la commune"],[/0694|00 00 00/,"le numéro de téléphone"],[/\b190\b/,"la mesure du pouls"],[/asthm/,"l'asthme"],[/\bpai\b/,"le PAI"],[/divorc/,"la situation familiale"],[/6 ?\/ ?20/,"la note"],[/dupont/,"l'identifiant"],[/soleil ?973/,"le mot de passe"],[/12 mars/,"la date de naissance"],[/5e b\b/,"la classe précise"]];
+const EXEMPLE=`Rédige un mot courtois aux parents d'un élève de 5e pour les informer d'un malaise survenu pendant une activité de classe et leur proposer un rendez-vous. Huit lignes, ton factuel et rassurant.`;
+
+const CADRE=[
+ {q:`À partir de quelle classe les élèves peuvent-ils utiliser eux-mêmes une IA générative en classe ?`,m:v=>/(^|[^0-9])4 ?(e|eme)?($|[^0-9a-z])/.test(v)||/quatrieme/.test(v),h:`C'est une classe du collège : ni la 6e, ni la 5e.`,ok:`La 4e : usage en classe, encadré et expliqué par l'enseignant.`},
+ {q:`Dans le 2nd degré, qui est responsable du traitement des données des élèves ?`,m:v=>(/chef/.test(v)&&/etablissement/.test(v))||/principal|proviseur/.test(v),h:`Il ou elle dirige le collège ou le lycée.`,ok:`Le chef d'établissement. L'enseignant l'informe avant d'utiliser un outil qui traite des données d'élèves.`},
+ {q:`Et dans le 1er degré ? (un sigle de cinq lettres)`,m:v=>/dasen/.test(v)||/direct(eur|rice) academique/.test(v),h:`Directeur académique des services de l'Éducation nationale.`,ok:`Le DASEN. L'enseignant passe par le directeur d'école ; le DPD de l'académie est associé.`}
+];
+const NIVEAUX=["Cycle 2 (CP-CE2)","Cycle 3 (CM1-CM2)","6e","5e","4e","3e","Lycée"];
+const FICHE=[
+ ["niveau","Niveau de la classe","select",NIVEAUX],
+ ["disc","Discipline et thème","text","ex. SVT – la biodiversité locale"],
+ ["obj","Objectif d'apprentissage (programme)","text","ce que les élèves sauront faire","full"],
+ ["entree","Entrée choisie","select",["Apprendre avec l'IA","Apprendre sur l'IA et la cybersécurité"]],
+ ["qui","Qui utilise l'IA ?","select",["Personne (activité débranchée)","L'enseignant, en démonstration","Les élèves, en classe"]],
+ ["t1","Déroulé – temps 1","text","mise en situation"],
+ ["t2","Déroulé – temps 2","text","activité des élèves"],
+ ["t3","Déroulé – temps 3","text","mise en commun, trace","full"],
+ ["outil","Outil et compte","text","ex. aucun · écran de l'enseignant · compte classe"],
+ ["donnees","Données saisies dans l'outil","text","ex. aucune · énoncé · mesures anonymes"],
+ ["feu","Règle annoncée aux élèves","select",["Feu rouge : IA interdite","Feu orange : IA permise pour une étape nommée","Feu vert : IA permise et déclarée"]],
+ ["verif","Comment les élèves vérifient","text","ex. manuel, clé de détermination, mesure"],
+ ["trace","Trace écrite ou évaluation","text","ex. schéma, bilan, oral de deux minutes","full"]
+];
+const GRILLE=[
+ "Aucune donnée personnelle d'élève n'est saisie dans l'outil.",
+ "Avant la 4e, les élèves ne manipulent pas l'IA eux-mêmes.",
+ "Aucun compte personnel n'est demandé aux élèves.",
+ "L'outil est institutionnel, ou ne reçoit que du publiable.",
+ "Les élèves vérifient au moins une réponse de l'IA.",
+ "La règle d'usage de l'IA figure dans la consigne.",
+ "L'activité fonctionne aussi sans connexion.",
+ "Le responsable (DASEN ou chef d'établissement) est informé si l'outil traite des données personnelles."
+];
+const IDEES=[
+ ["Cycle 3","La clé de détermination : classer comme un arbre de décision","Personne"],
+ ["Cycle 3","Vrai, faux ou fabriqué ? Trier des affirmations sur le vivant","L'enseignant, en amont"],
+ ["Cycle 3, 6e","La plante mystère : une appli de reconnaissance se trompe-t-elle ?","L'enseignant, en démonstration"],
+ ["4e-3e","Chasse à l'erreur dans une réponse d'IA sur la biodiversité","Les élèves, sans compte personnel"],
+ ["3e-2de","L'échantillon qui penche : moyennes de pouls anonymes","Personne"],
+ ["Lycée","Deux IA, une question de bioéthique : comparer et sourcer","Les élèves, cadre fixé"]
+];
+
+const ROOMS=[
+ {id:"quiz",emo:"🚦",k:"Salle 1 · Atelier 05",name:"Quiz « feu tricolore »",desc:"Douze situations de classe. Vert, orange ou rouge ?",n:QUIZ.length,
+  intro:"Lisez la situation, votez, puis ouvrez la porte. En cas de désaccord dans le binôme : chacun argumente trente secondes.",
+  flag:"ACAI{FEU_TRICOLORE_12_SUR_12}",done:"Tous les rouges ont l'une de ces trois causes.",reflex:[["1","Une donnée d'une <b>personne identifiable</b>."],["2","Une <b>décision déléguée</b> à l'outil."],["3","Une <b>identité non vérifiée</b>."]]},
+ {id:"tri",emo:"✂️",k:"Salle 2 · Atelier 05",name:"« Avant de coller, je trie »",desc:"Un prompt réaliste, huit éléments à retirer, une réécriture.",n:3,
+  intro:"Une collègue fictive s'apprête à envoyer ce message à une IA grand public. Aidez-la à trier avant de coller.",
+  flag:"ACAI{AVANT_DE_COLLER_JE_TRIE}",done:"Trois messages pour le débrief.",reflex:[["1","Le même service s'obtient presque toujours <b>sans la donnée</b>."],["2","Ce qui identifie n'est <b>pas seulement le nom</b> : l'établissement, la classe et la date suffisent."],["3","Un mot de passe ne se confie à personne, <b>IA comprise</b>."]]},
+ {id:"fiche",emo:"🧪",k:"Salle 3 · Atelier 06",name:"Séance cas pratique",desc:"Construisez une activité pour votre classe, puis relisez-la « en sécurité ».",n:3,
+  intro:"Vingt minutes donnent une fiche d'activité d'une page, pas une séance complète. Elle doit pouvoir servir dès la semaine prochaine.",
+  flag:"ACAI{ACTIVITE_EN_SECURITE}",done:"Votre fiche est prête à être imprimée et affichée.",reflex:[["1","Échangez votre fiche avec un autre binôme, qui joue le <b>parent ou le collègue sceptique</b>."],["2","Présentez-la en <b>trente secondes</b> pendant la restitution."]]}
+];
+
+/* ============ ÉTAT ============ */
+const KEY="acai_ateliers_ia_svt_v1";
+function fresh(){return{quiz:QUIZ.map(()=>false),tri:[false,false,false],fiche:[false,false,false],found:TARGETS.map(()=>false),cadre:CADRE.map(()=>false),vals:{},checks:GRILLE.map(()=>false),rewrite:""};}
+let st=fresh();
+try{const raw=localStorage.getItem(KEY);if(raw){const o=JSON.parse(raw);if(o&&o.quiz&&o.quiz.length===QUIZ.length)st=Object.assign(fresh(),o);}}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}try{buildPrint();}catch(e){}}
+const el=id=>document.getElementById(id);
+function norm(s){return(s||"").toString().trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[’`]/g,"'").replace(/\s+/g," ");}
+function esc(s){return(s||"").toString().replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function sup(s){return esc(s).replace(/(\d+)(er|re|nd|de|e)(?![a-zà-ÿ0-9])/gi,"$1<sup>$2</sup>");}
+let cur=-1;
+
+function count(){return st.quiz.filter(Boolean).length+st.tri.filter(Boolean).length+st.fiche.filter(Boolean).length;}
+function total(){return QUIZ.length+6;}
+function paint(){const c=count(),t=total();el("progtxt").textContent=c+" / "+t;el("progbar").style.width=(100*c/t)+"%";}
+function show(id){["home","play"].forEach(x=>el(x).hidden=(x!==id));window.scrollTo({top:0,behavior:"smooth"});}
+
+/* ============ HUB ============ */
+function renderHub(){
+  const g=el("hubgrid");g.innerHTML="";
+  ROOMS.forEach((r,i)=>{
+    const d=st[r.id].filter(Boolean).length,ok=d===r.n;
+    const b=document.createElement("button");b.className="gc"+(ok?" done":"");
+    b.innerHTML='<span class="emo">'+r.emo+'</span><span class="k">'+r.k+'</span><h3>'+r.name+'</h3><p>'+r.desc+'</p><div class="mini"><i style="width:'+(100*d/r.n)+'%"></i></div><span class="pstate">'+(ok?"✓ TERMINÉE":d?"● "+d+" / "+r.n:"▶ ENTRER")+'</span>';
+    b.addEventListener("click",()=>launch(i));g.appendChild(b);
+  });
+  el("allwin").hidden=count()!==total();
+  paint();
+}
+function launch(i){cur=i;const r=ROOMS[i];el("playtitle").textContent=r.emo+" "+r.name;el("playtag").textContent=r.k.toUpperCase();el("playintro").textContent=r.intro;el("modwin").hidden=true;show("play");render();}
+function render(){const id=ROOMS[cur].id;if(id==="quiz")renderQuiz();else if(id==="tri")renderTri();else renderFiche();paint();}
+function firstUnsolved(a){const i=a.indexOf(false);return i<0?a.length:i;}
+function doorShell(i,arr,key,title){
+  const solved=arr[i],active=i===firstUnsolved(arr);
+  const door=document.createElement("section");door.className="door "+(solved?"solved":active?"active":"locked");
+  const state=solved?'<span class="dstate st-ok">✓ OUVERTE</span>':active?'<span class="dstate st-open">● EN COURS</span>':'<span class="dstate st-lock">🔒 VERROUILLÉE</span>';
+  door.innerHTML='<div class="dhead"><div class="badge">'+(solved?"✓":String(i+1).padStart(2,"0"))+'</div><div class="dtitle"><div class="k">'+key+'</div><h2>'+title+'</h2></div>'+state+'</div>';
+  return{door,solved,active};
+}
+function afterSolve(arr){save();paint();setTimeout(()=>{if(arr.every(Boolean)){render();roomDone();}else{render();const n=document.querySelector("#rooms .door.active");if(n)n.scrollIntoView({behavior:"smooth",block:"center"});}},700);}
+function roomDone(){
+  const r=ROOMS[cur];el("modwin").hidden=false;el("modtitle").textContent="✓ Salle terminée — "+r.name;el("modtext").textContent=r.done;
+  el("modreflex").innerHTML=r.reflex.map(x=>'<div class="r"><b>'+x[0]+'</b><span>'+x[1]+'</span></div>').join("")+'<div class="flag"><div class="fl">// salle terminée — code validé</div><code>'+r.flag+'</code></div>';
+  const ni=ROOMS.findIndex((x,j)=>j!==cur&&!st[x.id].every(Boolean));
+  el("modnext").hidden=ni<0;if(ni>=0){el("modnext").textContent="Salle suivante : "+ROOMS[ni].name+" →";el("modnext").onclick=()=>launch(ni);}
+  el("modwin").scrollIntoView({behavior:"smooth",block:"center"});
+}
+
+/* ============ SALLE 1 : QUIZ ============ */
+function renderQuiz(){
+  const R=el("rooms");R.innerHTML="";
+  QUIZ.forEach((q,i)=>{
+    const{door,solved,active}=doorShell(i,st.quiz,"Situation "+String(i+1).padStart(2,"0"),q.t);
+    if(active||solved){
+      const b=document.createElement("div");b.className="dbody";
+      let h='<div class="scene"><p>'+sup(q.s)+'</p></div>';
+      if(solved){const c=COL[q.a];
+        h+='<div class="verdict '+c.c+'"><i></i>Feu '+c.n.toLowerCase()+' — '+c.l+'</div><div class="lesson '+c.c+'">'+q.rule+'</div><div class="classbox"><div class="t">🎓 En sciences et SVT</div><p>'+sup(q.cls)+'</p></div>';
+      }else{
+        h+='<div class="ask">Quel feu pour cette situation ?</div><p class="assist">Votez d\'abord, cliquez ensuite. Un désaccord ? Trente secondes d\'arguments chacun.</p>'
+          +'<div class="feux">'+["v","o","r"].map(k=>'<button class="feu '+k+'" data-c="'+k+'"><i></i>'+COL[k].n+'<small>'+COL[k].l+'</small></button>').join("")+'</div>'
+          +'<div class="inrow"><button class="btn ghost" data-act="hint">Indice</button><button class="btn ghost" data-act="reveal">Révéler la réponse</button></div><div class="fb" aria-live="polite"></div>';
+      }
+      b.innerHTML=h;door.appendChild(b);
+      if(!solved){
+        const fb=b.querySelector(".fb");
+        b.querySelectorAll(".feu").forEach(btn=>btn.addEventListener("click",()=>{
+          if(btn.dataset.c===q.a){fb.className="fb ok";fb.textContent="✓ C'est la couleur attendue — la porte s'ouvre.";st.quiz[i]=true;afterSolve(st.quiz);}
+          else{btn.classList.add("wrong");fb.className="fb no";fb.textContent="✗ Ce n'est pas la couleur attendue. Discutez-en, ou demandez l'indice.";setTimeout(()=>btn.classList.remove("wrong"),450);}
+        }));
+        b.querySelector('[data-act="hint"]').addEventListener("click",()=>{fb.className="fb hintline";fb.textContent="💡 "+q.hint;});
+        b.querySelector('[data-act="reveal"]').addEventListener("click",()=>{st.quiz[i]=true;afterSolve(st.quiz);});
+      }
+    }
+    R.appendChild(door);
+  });
+}
+
+/* ============ SALLE 2 : TRI ============ */
+function renderTri(){
+  const R=el("rooms");R.innerHTML="";
+  // Porte 1 : surligner
+  {
+    const{door,solved,active}=doorShell(0,st.tri,"Porte 01 — Le tri","Huit éléments à ne pas saisir");
+    if(active||solved){
+      const b=document.createElement("div");b.className="dbody";
+      b.innerHTML='<div class="scene"><p>Mme D., professeure de SVT, a préparé ce message. <strong>Cliquez sur chaque élément qui ne doit pas partir dans une IA grand public.</strong></p></div>'
+        +'<div class="legend"><span class="lg perso">● Personnel</span><span class="lg sens">● Sensible</span><span class="lg secret">● Secret</span></div>'
+        +'<div class="evi"><div class="top"><span class="dot" style="background:var(--danger)"></span><span class="dot"></span><span class="label">message prêt à être envoyé à une IA grand public</span></div><pre id="triText"></pre></div>'
+        +'<div class="counter"><b id="cnt">0</b> / '+TARGETS.length+' éléments surlignés</div><ul class="foundlist" id="foundList"></ul>'
+        +(solved?'<div class="flag"><div class="fl">// porte ouverte — code validé</div><code>ACAI{8_ELEMENTS_A_RETIRER}</code></div><div class="lesson"><b>À retenir.</b> Ce qui identifie n\'est pas seulement le nom : l\'établissement, la classe et la date suffisent.</div>'
+          :'<div class="inrow"><button class="btn ghost" id="triHint">Indice</button></div><div class="fb" id="triFb" aria-live="polite"></div>');
+      door.appendChild(b);
+      const pre=b.querySelector("#triText"),list=b.querySelector("#foundList"),cnt=b.querySelector("#cnt");
+      const refresh=()=>{
+        cnt.textContent=st.found.filter(Boolean).length;list.innerHTML="";
+        TARGETS.forEach((si,j)=>{if(st.found[j]||solved){const s=SEGS[si];const li=document.createElement("li");li.innerHTML='<b style="color:var(--'+(s.k==="perso"?"warn":s.k==="sens"?"danger":"blue")+')">'+KLBL[s.k]+' · '+s.n+'</b><br>'+sup(s.d);list.appendChild(li);}});
+      };
+      SEGS.forEach((s,si)=>{
+        const sp=document.createElement("span");sp.className="seg";sp.innerHTML=sup(s.t);
+        const j=TARGETS.indexOf(si);
+        if(j>=0&&(st.found[j]||solved))sp.classList.add(s.k);
+        if(!solved)sp.addEventListener("click",()=>{
+          const fb=b.querySelector("#triFb");
+          if(j<0){sp.classList.add("miss");fb.className="fb no";fb.textContent="✗ Rien à retirer ici : ce passage ne désigne personne.";setTimeout(()=>sp.classList.remove("miss"),450);return;}
+          if(st.found[j])return;
+          st.found[j]=true;sp.classList.add(s.k);save();refresh();fb.className="fb ok";fb.textContent="✓ "+s.n+".";
+          if(st.found.every(Boolean)){st.tri[0]=true;fb.textContent="✓ Huit sur huit — la porte s'ouvre.";afterSolve(st.tri);}
+        });
+        pre.appendChild(sp);
+      });
+      refresh();
+      if(!solved)b.querySelector("#triHint").addEventListener("click",()=>{const fb=b.querySelector("#triFb");fb.className="fb hintline";fb.textContent="💡 Cherchez : 4 éléments personnels, 3 sensibles (santé, vie privée) et 1 secret. Il en reste "+st.found.filter(x=>!x).length+".";});
+    }
+    R.appendChild(door);
+  }
+  // Porte 2 : réécrire
+  {
+    const{door,solved,active}=doorShell(1,st.tri,"Porte 02 — La réécriture","Le même service, sans la donnée");
+    if(active||solved){
+      const b=document.createElement("div");b.className="dbody";
+      b.innerHTML='<div class="scene"><p>Réécrivez la demande de Mme D. pour obtenir <strong>le même service</strong> — un mot aux parents — sans aucun des huit éléments.</p></div>'
+        +'<textarea class="code" id="rw" placeholder="Rédige un mot…" '+(solved?"readonly":"")+'>'+esc(st.rewrite)+'</textarea>'
+        +(solved?'<div class="flag"><div class="fl">// porte ouverte — code validé</div><code>ACAI{LE_BESOIN_PAS_L_ELEVE}</code></div><div class="classbox"><div class="t">🎓 Un exemple de réponse</div><p>« '+sup(EXEMPLE)+' »</p></div>'
+          :'<div class="inrow"><button class="btn" id="rwGo">Vérifier ma réécriture →</button><button class="btn ghost" id="rwHint">Indice</button></div><div class="fb" id="rwFb" aria-live="polite"></div>');
+      door.appendChild(b);
+      if(!solved){
+        const ta=b.querySelector("#rw"),fb=b.querySelector("#rwFb");
+        ta.addEventListener("input",()=>{st.rewrite=ta.value;save();});
+        b.querySelector("#rwGo").addEventListener("click",()=>{
+          const v=norm(ta.value);const left=RISKY.filter(x=>x[0].test(v)).map(x=>x[1]);
+          if(v.length<40){ta.classList.add("wrong");fb.className="fb no";fb.textContent="✗ Un peu court : dites à l'IA ce que vous attendez (destinataire, ton, longueur).";setTimeout(()=>ta.classList.remove("wrong"),450);}
+          else if(left.length){ta.classList.add("wrong");fb.className="fb no";fb.textContent="✗ Il reste : "+left.join(", ")+".";setTimeout(()=>ta.classList.remove("wrong"),450);}
+          else{ta.classList.add("right");fb.className="fb ok";fb.textContent="✓ Plus aucune donnée de l'élève — la porte s'ouvre.";st.tri[1]=true;afterSolve(st.tri);}
+        });
+        b.querySelector("#rwHint").addEventListener("click",()=>{fb.className="fb hintline";fb.textContent="💡 Décrivez le besoin, pas l'élève : « les parents d'un élève de 5e », « un malaise pendant une activité de classe ».";});
+      }
+    }
+    R.appendChild(door);
+  }
+  // Porte 3 : le réflexe
+  {
+    const{door,solved,active}=doorShell(2,st.tri,"Porte 03 — Le réflexe","La phrase à faire répéter");
+    if(active||solved){
+      const b=document.createElement("div");b.className="dbody";
+      b.innerHTML='<div class="scene"><p>Avant de quitter la salle, complétez le réflexe.</p></div><div class="ask">« Avant de coller, je … »</div><p class="assist">Un seul mot.</p>'
+        +(solved?'<div class="flag"><div class="fl">// porte ouverte — code validé</div><code>ACAI{AVANT_DE_COLLER_JE_TRIE}</code></div>'
+          :'<div class="inrow"><span class="pre mono">&gt;</span><input class="code" id="rf" autocomplete="off" spellcheck="false" placeholder="votre réponse…" aria-label="réponse"><button class="btn" id="rfGo">Valider →</button><button class="btn ghost" id="rfHint">Indice</button></div><div class="fb" id="rfFb" aria-live="polite"></div>');
+      door.appendChild(b);
+      if(!solved){
+        const inp=b.querySelector("#rf"),fb=b.querySelector("#rfFb");
+        const go=()=>{const v=norm(inp.value);if(!v){inp.focus();return;}
+          if(["trie","je trie","tri"].includes(v)){inp.classList.add("right");fb.className="fb ok";fb.textContent="✓ Bravo — la porte s'ouvre !";st.tri[2]=true;afterSolve(st.tri);}
+          else{inp.classList.add("wrong");fb.className="fb no";fb.textContent="✗ Pas encore. C'est le titre de la salle.";setTimeout(()=>inp.classList.remove("wrong"),450);}};
+        b.querySelector("#rfGo").addEventListener("click",go);inp.addEventListener("keydown",e=>{if(e.key==="Enter")go();});
+        b.querySelector("#rfHint").addEventListener("click",()=>{fb.className="fb hintline";fb.textContent="💡 Quatre lettres : on sépare ce qui peut partir de ce qui doit rester.";});
+      }
+    }
+    R.appendChild(door);
+  }
+}
+
+/* ============ SALLE 3 : FICHE ============ */
+function renderFiche(){
+  const R=el("rooms");R.innerHTML="";
+  // Porte 1 : le cadre (questions-réponses)
+  {
+    const{door,solved,active}=doorShell(0,st.fiche,"Porte 01 — Le cadre","Trois repères avant de construire");
+    if(active||solved){
+      const b=document.createElement("div");b.className="dbody";
+      b.innerHTML='<div class="scene"><p>Répondez aux trois questions pour ouvrir la porte.</p></div>'+CADRE.map((c,k)=>
+        '<div class="ask">'+(k+1)+'. '+sup(c.q)+'</div>'+((st.cadre[k]||solved)?'<div class="lesson"><b>✓</b> '+sup(c.ok)+'</div>'
+        :'<div class="inrow"><span class="pre mono">&gt;</span><input class="code" data-k="'+k+'" autocomplete="off" spellcheck="false" placeholder="votre réponse…" aria-label="réponse '+(k+1)+'"><button class="btn" data-go="'+k+'">Valider →</button><button class="btn ghost" data-hint="'+k+'">Indice</button></div><div class="fb" data-fb="'+k+'" aria-live="polite"></div>')).join("")
+        +(solved?'<div class="flag"><div class="fl">// porte ouverte — code validé</div><code>ACAI{4E_DASEN_CHEF_D_ETABLISSEMENT}</code></div>':'');
+      door.appendChild(b);
+      if(!solved)CADRE.forEach((c,k)=>{
+        if(st.cadre[k])return;
+        const inp=b.querySelector('input[data-k="'+k+'"]'),fb=b.querySelector('[data-fb="'+k+'"]');
+        const go=()=>{const v=norm(inp.value);if(!v){inp.focus();return;}
+          if(c.m(v)){st.cadre[k]=true;save();if(st.cadre.every(Boolean)){st.fiche[0]=true;afterSolve(st.fiche);}else render();}
+          else{inp.classList.add("wrong");fb.className="fb no";fb.textContent="✗ Pas encore. Relisez la question, ou demandez l'indice.";setTimeout(()=>inp.classList.remove("wrong"),450);}};
+        b.querySelector('[data-go="'+k+'"]').addEventListener("click",go);inp.addEventListener("keydown",e=>{if(e.key==="Enter")go();});
+        b.querySelector('[data-hint="'+k+'"]').addEventListener("click",()=>{fb.className="fb hintline";fb.textContent="💡 "+c.h;});
+      });
+    }
+    R.appendChild(door);
+  }
+  // Porte 2 : la fiche
+  {
+    const{door,solved,active}=doorShell(1,st.fiche,"Porte 02 — La fiche d'activité","Une page, pour votre classe");
+    if(active||solved){
+      const b=document.createElement("div");b.className="dbody";
+      const fields=FICHE.map(f=>{
+        const v=st.vals[f[0]]||"";
+        const ctl=f[2]==="select"?'<select class="code" data-f="'+f[0]+'"><option value="">— choisir —</option>'+f[3].map(o=>'<option'+(o===v?" selected":"")+'>'+esc(o)+'</option>').join("")+'</select>'
+          :'<input class="code" data-f="'+f[0]+'" value="'+esc(v)+'" placeholder="'+esc(f[3])+'" autocomplete="off">';
+        return'<div class="fld'+(f[4]?" full":"")+'"><label>'+f[1]+'</label>'+ctl+'</div>';}).join("");
+      b.innerHTML='<div class="scene"><p>Choisissez un point du programme de votre classe, puis remplissez la fiche. Besoin d\'un point de départ ?</p></div>'
+        +'<details class="learn"><summary>Six idées d\'activités en sciences et SVT</summary><div class="c"><table><tr><th>Public</th><th>Activité</th><th>Qui utilise l\'IA ?</th></tr>'
+        +IDEES.map(r=>'<tr><td>'+sup(r[0])+'</td><td>'+sup(r[1])+'</td><td>'+sup(r[2])+'</td></tr>').join("")+'</table></div></details>'
+        +'<div class="grid2">'+fields+'</div>'
+        +'<div class="inrow"><button class="btn" id="ficheGo">'+(solved?"Mettre à jour la fiche":"Valider la fiche →")+'</button><button class="btn ghost" id="ficheHint">Indice</button></div><div class="fb" id="ficheFb" aria-live="polite"></div>'
+        +(solved?'<div class="flag"><div class="fl">// porte ouverte — code validé</div><code>ACAI{UNE_FICHE_PAS_UNE_SEANCE}</code></div>':'');
+      door.appendChild(b);
+      b.querySelectorAll("[data-f]").forEach(c=>c.addEventListener("input",()=>{st.vals[c.dataset.f]=c.value;save();}));
+      const fb=b.querySelector("#ficheFb");
+      b.querySelector("#ficheGo").addEventListener("click",()=>{
+        const miss=FICHE.filter(f=>!(st.vals[f[0]]||"").trim());
+        const young=NIVEAUX.indexOf(st.vals.niveau)>=0&&NIVEAUX.indexOf(st.vals.niveau)<4;
+        if(miss.length){fb.className="fb no";fb.textContent="✗ Il manque : "+miss.map(f=>f[1].toLowerCase()).join(" · ")+".";const c=b.querySelector('[data-f="'+miss[0][0]+'"]');c.classList.add("wrong");c.focus();setTimeout(()=>c.classList.remove("wrong"),450);}
+        else if(young&&st.vals.qui==="Les élèves, en classe"){fb.className="fb no";fb.textContent="✗ Avant la 4e, les élèves ne manipulent pas l'IA eux-mêmes : choisissez une activité débranchée ou une démonstration.";}
+        else{fb.className="fb ok";fb.textContent="✓ Fiche complète — la porte s'ouvre.";if(!st.fiche[1]){st.fiche[1]=true;afterSolve(st.fiche);}else{save();buildPrint();}}
+      });
+      b.querySelector("#ficheHint").addEventListener("click",()=>{fb.className="fb hintline";fb.textContent="💡 Une bonne activité tient en trois temps, fonctionne sans connexion et dit clairement qui utilise l'IA.";});
+    }
+    R.appendChild(door);
+  }
+  // Porte 3 : la grille
+  {
+    const{door,solved,active}=doorShell(2,st.fiche,"Porte 03 — La grille « en sécurité »","Huit cases à cocher");
+    if(active||solved){
+      const b=document.createElement("div");b.className="dbody";
+      b.innerHTML='<div class="scene"><p>Relisez votre fiche avec la grille. Une case non cochée indique ce qu\'il faut corriger avant d\'entrer en classe.</p></div>'
+        +'<div class="checks">'+GRILLE.map((g,k)=>'<label class="ck'+(st.checks[k]?" on":"")+'"><input type="checkbox" data-c="'+k+'"'+(st.checks[k]?" checked":"")+'><span>'+sup(g)+'</span></label>').join("")+'</div>'
+        +'<div class="counter" style="margin-top:12px"><b id="ckn">'+st.checks.filter(Boolean).length+'</b> / '+GRILLE.length+' cases cochées</div>'
+        +'<div class="inrow"><button class="btn" id="printBtn">🖨 Imprimer la fiche</button></div><div class="fb" id="ckFb" aria-live="polite"></div>'
+        +(solved?'<div class="flag"><div class="fl">// porte ouverte — code validé</div><code>ACAI{ACTIVITE_EN_SECURITE}</code></div>':'');
+      door.appendChild(b);
+      b.querySelectorAll("[data-c]").forEach(c=>c.addEventListener("change",()=>{
+        st.checks[+c.dataset.c]=c.checked;c.closest(".ck").classList.toggle("on",c.checked);b.querySelector("#ckn").textContent=st.checks.filter(Boolean).length;save();
+        if(st.checks.every(Boolean)&&!st.fiche[2]){const fb=b.querySelector("#ckFb");fb.className="fb ok";fb.textContent="✓ Huit sur huit — l'activité peut entrer en classe.";st.fiche[2]=true;afterSolve(st.fiche);}
+      }));
+      b.querySelector("#printBtn").addEventListener("click",()=>{buildPrint();window.print();});
+    }
+    R.appendChild(door);
+  }
+}
+function buildPrint(){
+  const rows=FICHE.map(f=>'<tr><th>'+f[1]+'</th><td>'+sup(st.vals[f[0]]||"")+'&nbsp;</td></tr>').join("");
+  el("printFiche").innerHTML='<h1>Fiche d\'activité — IA et sciences / SVT</h1><p class="sub">Atelier 06 · Séance cas pratique · construite en binôme</p><table>'+rows+'</table>'
+    +'<h2>Grille de relecture « en sécurité »</h2><ul>'+GRILLE.map((g,k)=>'<li>'+(st.checks[k]?"☑":"☐")+' '+sup(g)+'</li>').join("")+'</ul>'
+    +'<p class="foot">Repères : cadre d\'usage de l\'IA en éducation (ministère, juin 2025) ; FAQ de la CNIL pour les enseignants (20 juin 2025).</p>';
+}
+
+/* ============ DIVERS ============ */
+el("playBack").addEventListener("click",()=>{renderHub();show("home");});
+el("modback").addEventListener("click",()=>{renderHub();show("home");});
+el("wipeBtn").addEventListener("click",()=>{if(el("wipeBtn").dataset.sure){st=fresh();save();el("wipeBtn").textContent="Réinitialiser la progression";delete el("wipeBtn").dataset.sure;renderHub();}else{el("wipeBtn").dataset.sure="1";el("wipeBtn").textContent="Confirmer la remise à zéro ?";setTimeout(()=>{if(el("wipeBtn").dataset.sure){delete el("wipeBtn").dataset.sure;el("wipeBtn").textContent="Réinitialiser la progression";}},4000);}});
+el("projBtn").addEventListener("click",()=>{const on=document.body.classList.toggle("proj");el("projBtn").setAttribute("aria-pressed",on?"true":"false");});
+buildPrint();renderHub();
+</script>
+</body>
+</html>
