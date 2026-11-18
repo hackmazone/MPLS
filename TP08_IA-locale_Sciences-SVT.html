@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TP technique — Mon IA tourne chez moi (Sciences &amp; SVT)</title>
+<!-- Polices facultatives, chargées sans bloquer l'affichage : hors connexion, la page utilise les polices du système -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@500;700;800&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<style>
+
+  /* Salle d'atelier — même format que le « Parcours Cyber & IA » : hub → salles → portes → code de validation */
+  :root{
+    --bg:#070a10; --bg2:#0b111c; --surface:#0e1726; --surface2:#121d30;
+    --line:#1d2a40; --line2:#27384f;
+    --fg:#e8eff7; --muted:#8696ac; --faint:#5e6e85;
+    --blue:#2e9bff; --green:#34d8a0; --gold:#ffcb2e;
+    --danger:#ff5366; --warn:#ffb020;
+    --grad:linear-gradient(120deg,#2e9bff 0%,#34d8a0 100%);
+    --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+    --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --disp:"Oxanium","IBM Plex Sans",system-ui,sans-serif;
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);line-height:1.55;
+    background-image:radial-gradient(900px 500px at 85% -5%,rgba(46,155,255,.10),transparent 60%),radial-gradient(800px 500px at 0% 105%,rgba(52,216,160,.09),transparent 60%);
+    background-attachment:fixed;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 16px 64px}
+  a{color:var(--blue)}
+  h1,h2,h3{font-family:var(--disp);text-wrap:balance;line-height:1.15;margin:0}
+  .mono{font-family:var(--mono)}
+  [hidden]{display:none!important}
+
+  header.bar{position:sticky;top:0;z-index:20;background:rgba(8,13,22,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .bar .in{max-width:920px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:10px 16px}
+  .logo{width:30px;height:30px;border-radius:7px;flex:0 0 auto;display:grid;place-items:center;background:var(--grad);color:#041018;font-family:var(--disp);font-weight:800;font-size:12px}
+  .brand{font-family:var(--disp);font-weight:700;letter-spacing:.3px;font-size:14px}
+  .brand small{display:block;font-family:var(--mono);font-weight:400;font-size:10px;color:var(--faint);letter-spacing:1.5px}
+  .bar .prog{margin-left:auto;display:flex;align-items:center;gap:9px;min-width:0}
+  .prog .txt{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap}
+  .track{width:110px;max-width:26vw;height:7px;border-radius:99px;background:#101a2b;overflow:hidden;border:1px solid var(--line)}
+  .track i{display:block;height:100%;width:0;background:var(--grad);transition:width .5s ease}
+  .tgl{font-family:var(--mono);font-size:11px;color:var(--muted);background:transparent;border:1px solid var(--line2);border-radius:8px;padding:6px 9px;cursor:pointer}
+  .tgl[aria-pressed="true"]{color:#041018;background:var(--grad);border-color:transparent;font-weight:700}
+
+  .hero{padding:30px 0 8px;display:flex;gap:22px;align-items:center}
+  .herotext{flex:1;min-width:0}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--green);margin:0 0 13px}
+  .hero h1{font-size:clamp(30px,7vw,50px);font-weight:800;letter-spacing:-.5px}
+  .hero h1 .g{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lede{color:var(--muted);max-width:62ch;margin-top:13px;font-size:15.5px}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .chip{font-family:var(--mono);font-size:11px;letter-spacing:.5px;padding:5px 11px;border-radius:99px;border:1px solid var(--line2);background:var(--surface);color:var(--muted)}
+  .chip b{color:var(--fg);font-weight:600}
+
+  /* feu tricolore animé */
+  .feuart{flex:0 0 auto;width:84px;padding:12px 0;border-radius:22px;background:#060b14;border:1px solid var(--line2);display:grid;gap:10px;justify-items:center;box-shadow:0 18px 40px -22px rgba(0,0,0,.9)}
+  .feuart i{width:46px;height:46px;border-radius:50%;opacity:.22;transition:opacity .3s, box-shadow .3s}
+  .feuart .r{background:var(--danger)} .feuart .o{background:var(--warn)} .feuart .v{background:var(--green)}
+  .feuart.cycle .r{animation:lamp 6s infinite 0s} .feuart.cycle .o{animation:lamp 6s infinite 2s} .feuart.cycle .v{animation:lamp 6s infinite 4s}
+  .feuart i.on{opacity:1;box-shadow:0 0 26px currentColor}
+  .feuart .r{color:var(--danger)} .feuart .o{color:var(--warn)} .feuart .v{color:var(--green)}
+  @keyframes lamp{0%,28%{opacity:1;box-shadow:0 0 26px currentColor}34%,100%{opacity:.22;box-shadow:none}}
+
+  .partners{margin-top:20px;border:1px solid var(--line);border-radius:13px;background:var(--surface);padding:12px 16px;display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center}
+  .partners .t{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--faint)}
+  .partners .nm{font-family:var(--disp);font-weight:600;font-size:13px}
+
+  .section-h{font-family:var(--disp);font-weight:800;font-size:clamp(20px,4.5vw,26px);margin:28px 0 4px}
+  .section-s{color:var(--muted);font-size:14px;margin:0 0 16px;max-width:64ch}
+
+  .hubgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  .gc{border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:16px;cursor:pointer;text-align:left;color:inherit;font:inherit;display:flex;flex-direction:column;gap:8px;transition:transform .2s,border-color .2s, box-shadow .2s}
+  .gc:hover,.gc:focus-visible{transform:translateY(-3px);border-color:var(--blue);box-shadow:0 18px 40px -26px rgba(46,155,255,.8);outline:none}
+  .gc .emo{font-size:30px;line-height:1}
+  .gc .k{font-family:var(--mono);font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--faint)}
+  .gc h3{font-size:17px}
+  .gc p{margin:0;color:var(--muted);font-size:13.5px;flex:1}
+  .gc .pstate{font-family:var(--mono);font-size:11px;color:var(--blue)}
+  .gc.done{border-color:rgba(52,216,160,.45)} .gc.done .pstate{color:var(--green)}
+  .mini{height:5px;border-radius:99px;background:#101a2b;overflow:hidden}
+  .mini i{display:block;height:100%;background:var(--grad);width:0;transition:width .5s}
+
+  .playbar{display:flex;align-items:center;gap:12px;margin-top:22px;flex-wrap:wrap}
+  .playbar h2{font-size:clamp(20px,5vw,28px)}
+  .playbar .pt{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:auto}
+  .rooms{margin-top:18px;display:flex;flex-direction:column;gap:16px}
+  .door{border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden;transition:border-color .3s, box-shadow .3s}
+  .door.locked{opacity:.5}
+  .door.active{border-color:var(--line2);box-shadow:0 0 0 1px rgba(46,155,255,.25),0 18px 40px -22px rgba(0,0,0,.8);animation:rise .45s ease}
+  .door.solved{border-color:rgba(52,216,160,.3)}
+  @keyframes rise{from{transform:translateY(10px);opacity:.3}to{transform:none;opacity:1}}
+  .dhead{display:flex;align-items:center;gap:13px;padding:15px 16px}
+  .badge{width:38px;height:38px;flex:0 0 auto;border-radius:9px;display:grid;place-items:center;font-family:var(--mono);font-weight:700;font-size:14px;border:1px solid var(--line2);background:var(--bg2);color:var(--muted)}
+  .door.active .badge,.door.solved .badge{background:var(--grad);color:#04141f;border-color:transparent}
+  .dtitle{min-width:0;flex:1}
+  .dtitle .k{font-family:var(--mono);font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--faint)}
+  .dtitle h2{font-size:17px}
+  .dstate{flex:0 0 auto;font-family:var(--mono);font-size:11px;padding:4px 9px;border-radius:7px}
+  .st-ok{color:var(--green);border:1px solid rgba(52,216,160,.35)} .st-open{color:var(--blue)} .st-lock{color:var(--faint);border:1px solid var(--line)}
+  .dbody{border-top:1px solid var(--line);padding:16px}
+  .scene{color:#cdd9e8;font-size:15.5px}
+  .scene p{margin:0 0 11px}
+  .evi{border:1px solid var(--line2);border-radius:10px;background:#060b14;margin:13px 0;overflow:hidden}
+  .evi .top{display:flex;align-items:center;gap:7px;padding:8px 12px;border-bottom:1px solid var(--line);background:#0a1120}
+  .evi .dot{width:9px;height:9px;border-radius:50%;background:#2a3550}
+  .evi .label{font-family:var(--mono);font-size:11px;color:var(--faint);margin-left:4px}
+  .evi pre{margin:0;padding:13px 14px;font-family:var(--mono);font-size:13.5px;line-height:1.9;color:#b9c6d8;white-space:pre-wrap;word-break:break-word}
+  .seg{cursor:pointer;border-radius:4px;padding:1px 0;transition:background .2s,color .2s}
+  .seg:hover{background:rgba(46,155,255,.14)}
+  .seg.miss{animation:shake .4s}
+  .seg.perso{background:rgba(255,176,32,.2);color:var(--warn);font-weight:600}
+  .seg.sens{background:rgba(255,83,102,.2);color:var(--danger);font-weight:600}
+  .seg.secret{background:rgba(46,155,255,.22);color:var(--blue);font-weight:600}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 10px}
+  .lg{font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:99px;border:1px solid var(--line2)}
+  .lg.perso{color:var(--warn);border-color:rgba(255,176,32,.45)} .lg.sens{color:var(--danger);border-color:rgba(255,83,102,.45)} .lg.secret{color:var(--blue);border-color:rgba(46,155,255,.45)}
+  .foundlist{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:7px}
+  .foundlist li{border:1px solid var(--line);border-radius:9px;background:var(--bg2);padding:9px 12px;font-size:13.5px;animation:rise .35s ease}
+  .foundlist b{font-family:var(--mono);font-size:11px;letter-spacing:.5px;text-transform:uppercase}
+  .counter{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+  .counter b{color:var(--green);font-size:16px}
+
+  details.learn{border:1px solid var(--line);border-radius:10px;background:var(--bg2);margin:13px 0;overflow:hidden}
+  details.learn summary{cursor:pointer;list-style:none;padding:11px 14px;font-family:var(--disp);font-weight:600;font-size:13.5px;color:var(--blue)}
+  details.learn summary::before{content:"▸ "} details.learn[open] summary::before{content:"▾ "}
+  details.learn .c{padding:0 14px 13px;font-size:14px;color:#cdd9e8}
+  details.learn table{width:100%;border-collapse:collapse;font-size:13px}
+  details.learn td,details.learn th{border-top:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+  details.learn th{font-family:var(--mono);font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--faint);border-top:none}
+
+  .ask{font-family:var(--disp);font-weight:600;font-size:16px;margin:16px 0 4px}
+  .assist{color:var(--muted);font-size:13px;margin:0 0 12px}
+  .inrow{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:8px}
+  .inrow .pre{font-family:var(--mono);color:var(--green);font-size:15px}
+  .code,textarea.code,select.code{flex:1;min-width:160px;font-family:var(--mono);font-size:14px;color:var(--fg);background:#060b14;border:1px solid var(--line2);border-radius:9px;padding:11px 13px}
+  textarea.code{width:100%;min-height:110px;resize:vertical;font-family:var(--body);line-height:1.5}
+  .code:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(46,155,255,.18)}
+  .btn{font-family:var(--disp);font-weight:700;border:none;border-radius:9px;cursor:pointer;padding:11px 18px;background:var(--grad);color:#041018;font-size:14px}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:transparent;border:1px solid var(--line2);color:var(--muted);font-weight:600;padding:10px 14px;font-size:13px}
+  .btn.ghost:hover{color:var(--fg);border-color:var(--blue)}
+  .fb{font-family:var(--mono);font-size:12.5px;margin-top:10px;min-height:1em}
+  .fb.no{color:var(--danger)} .fb.hintline{color:var(--warn)} .fb.ok{color:var(--green)}
+  .wrong{border-color:var(--danger)!important;animation:shake .4s}
+  .right{border-color:var(--green)!important}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+  .feux{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:8px}
+  .feu{font-family:var(--disp);font-weight:700;font-size:15px;border-radius:12px;border:2px solid var(--line2);background:#060b14;color:var(--fg);padding:14px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:transform .15s,border-color .2s,box-shadow .2s}
+  .feu i{width:34px;height:34px;border-radius:50%;display:block}
+  .feu small{font-family:var(--body);font-weight:400;font-size:12.5px;color:var(--muted)}
+  .feu.v i{background:var(--green)} .feu.o i{background:var(--warn)} .feu.r i{background:var(--danger)}
+  .feu:hover,.feu:focus-visible{transform:translateY(-2px);outline:none}
+  .feu.v:hover,.feu.v:focus-visible{border-color:var(--green);box-shadow:0 0 22px -6px var(--green)}
+  .feu.o:hover,.feu.o:focus-visible{border-color:var(--warn);box-shadow:0 0 22px -6px var(--warn)}
+  .feu.r:hover,.feu.r:focus-visible{border-color:var(--danger);box-shadow:0 0 22px -6px var(--danger)}
+  .verdict{display:inline-flex;align-items:center;gap:9px;font-family:var(--disp);font-weight:700;border-radius:99px;padding:7px 14px;margin-top:6px;animation:pop .4s ease}
+  .verdict i{width:14px;height:14px;border-radius:50%;display:block}
+  .verdict.v{color:var(--green);border:1px solid rgba(52,216,160,.5);background:rgba(52,216,160,.08)} .verdict.v i{background:var(--green)}
+  .verdict.o{color:var(--warn);border:1px solid rgba(255,176,32,.5);background:rgba(255,176,32,.08)} .verdict.o i{background:var(--warn)}
+  .verdict.r{color:var(--danger);border:1px solid rgba(255,83,102,.5);background:rgba(255,83,102,.08)} .verdict.r i{background:var(--danger)}
+  @keyframes pop{0%{transform:scale(.8);opacity:0}70%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
+
+  .flag{margin-top:14px;border:1px dashed rgba(52,216,160,.45);background:rgba(52,216,160,.07);border-radius:10px;padding:13px 14px}
+  .flag .fl{font-family:var(--mono);font-size:10.5px;letter-spacing:1.5px;color:var(--green);text-transform:uppercase}
+  .flag code{font-family:var(--mono);font-size:14px;color:var(--fg);word-break:break-all}
+  .lesson{margin-top:11px;font-size:14.5px;color:#cdd9e8;border-left:2px solid var(--line2);padding-left:12px}
+  .lesson b{color:var(--green)}
+  .lesson.o b{color:var(--warn)} .lesson.r b{color:var(--danger)}
+  .classbox{margin-top:12px;border:1px solid rgba(255,203,46,.3);background:rgba(255,203,46,.06);border-radius:10px;padding:12px 14px}
+  .classbox .t{font-family:var(--mono);font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold)}
+  .classbox p{margin:6px 0 0;font-size:14px;color:#cdd9e8}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+  .fld{display:flex;flex-direction:column;gap:6px}
+  .fld.full{grid-column:1/-1}
+  .fld label{font-family:var(--mono);font-size:11px;letter-spacing:.5px;color:var(--muted)}
+  .fld .code{min-width:0;font-family:var(--body)}
+  .checks{display:grid;gap:9px;margin-top:6px}
+  .ck{display:flex;gap:11px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;background:var(--bg2);padding:11px 13px;cursor:pointer;font-size:14.5px}
+  .ck input{width:20px;height:20px;margin-top:1px;accent-color:#34d8a0;flex:0 0 auto}
+  .ck.on{border-color:rgba(52,216,160,.45)}
+
+  .modwin{margin-top:26px;border:1px solid rgba(52,216,160,.4);border-radius:16px;background:linear-gradient(180deg,rgba(52,216,160,.08),var(--surface));padding:26px 20px;text-align:center;animation:rise .5s ease}
+  .modwin h2{font-size:clamp(20px,5vw,28px);background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .modwin p{color:var(--muted);max-width:56ch;margin:10px auto 0;font-size:14px}
+  .reflex{margin:18px auto 0;max-width:560px;display:grid;gap:8px;text-align:left}
+  .reflex .r{display:flex;gap:11px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;background:var(--bg2);padding:11px 13px}
+  .reflex .r b{font-family:var(--mono);color:var(--green)}
+  .modcta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+
+  footer{margin-top:34px;border-top:1px solid var(--line);padding-top:16px;color:var(--faint);font-size:12.5px}
+  footer b{color:var(--muted)}
+
+  /* mode projection : plus gros, pour le vidéoprojecteur */
+  body.proj .wrap,body.proj .bar .in{max-width:1180px}
+  body.proj .scene{font-size:22px} body.proj .ask{font-size:21px} body.proj .feu{font-size:19px;padding:20px 10px}
+  body.proj .lesson,body.proj .classbox p{font-size:18px} body.proj .evi pre{font-size:17px} body.proj .dtitle h2{font-size:22px}
+
+  #printFiche{display:none}
+  @media(max-width:760px){.hubgrid{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.hero{flex-direction:column-reverse;align-items:flex-start}.feuart{width:auto;padding:8px 14px;grid-auto-flow:column}.feuart i{width:30px;height:30px}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  @media print{
+    body{background:#fff;color:#000}
+    header.bar,main,footer{display:none!important}
+    #printFiche{display:block;font-family:Calibri,Arial,sans-serif;color:#000;padding:8mm}
+    #printFiche h1{font-family:inherit;font-size:20pt;color:#00334D;margin:0 0 2mm}
+    #printFiche .sub{color:#4B7D8F;font-style:italic;margin:0 0 5mm}
+    #printFiche table{width:100%;border-collapse:collapse;font-size:11pt}
+    #printFiche td,#printFiche th{border:1px solid #9aa7b2;padding:2.2mm 3mm;text-align:left;vertical-align:top}
+    #printFiche th{width:34%;background:#EEF2F5;color:#00334D}
+    #printFiche h2{font-family:inherit;font-size:13pt;color:#00334D;margin:6mm 0 2mm}
+    #printFiche ul{list-style:none;padding:0;margin:0;font-size:11pt}
+    #printFiche li{margin:1.2mm 0}
+    #printFiche .foot{margin-top:6mm;font-size:9pt;color:#555}
+  }
+
+  /* ---- TP « IA locale » ---- */
+  .toolart{flex:0 0 auto;display:grid;gap:10px}
+  .toolart span{width:64px;height:64px;border-radius:16px;display:grid;place-items:center;font-size:30px;background:#060b14;border:1px solid var(--line2);animation:bob 4s ease-in-out infinite}
+  .toolart span:nth-child(2){animation-delay:.6s}.toolart span:nth-child(3){animation-delay:1.2s}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  .gc.bonus{border-style:dashed}
+  .poste{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:11px 14px;margin:16px 0 0;font-size:13px}
+  .poste .lab{font-family:var(--mono);font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--faint)}
+  .poste .mdl{font-family:var(--mono);color:var(--green);font-size:12.5px}
+  .seggrp{display:inline-flex;border:1px solid var(--line2);border-radius:9px;overflow:hidden}
+  .seggrp button{font-family:var(--mono);font-size:12px;background:transparent;color:var(--muted);border:none;padding:7px 11px;cursor:pointer}
+  .seggrp button+button{border-left:1px solid var(--line2)}
+  .seggrp button[aria-pressed="true"]{background:var(--grad);color:#041018;font-weight:700}
+  .seggrp button:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
+  .evi .top .cp{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted);background:transparent;border:1px solid var(--line2);border-radius:6px;padding:3px 9px;cursor:pointer}
+  .cp:hover{color:var(--fg);border-color:var(--blue)} .cp.done{color:var(--green);border-color:rgba(52,216,160,.5)}
+  .term pre{color:#d6f5e6;line-height:1.7}
+  .doc pre{line-height:1.6;font-size:13px;max-height:340px;overflow:auto}
+  ol.steps{margin:8px 0 12px;padding-left:22px;color:#cdd9e8;font-size:15px} ol.steps li{margin:7px 0}
+  code.i{font-family:var(--mono);font-size:.9em;background:#0a1120;border:1px solid var(--line);border-radius:5px;padding:1px 5px;color:#d6f5e6;word-break:break-word}
+  .tools{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+  .tools .btn.ghost{padding:9px 12px}
+  .tscroll{overflow-x:auto;border:1px solid var(--line2);border-radius:10px;background:#060b14;margin:10px 0}
+  table.dt{border-collapse:collapse;width:100%;font-family:var(--mono);font-size:12.5px;white-space:nowrap}
+  table.dt th,table.dt td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left}
+  table.dt th{background:#0a1120;color:var(--muted);font-weight:700}
+  table.dt tr:last-child td{border-bottom:none}
+  table.dt td.num,table.dt th.num{text-align:right}
+  table.cmp{border-collapse:collapse;width:100%;font-size:13.5px;margin:10px 0}
+  table.cmp th,table.cmp td{border:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+  table.cmp thead th{background:#0a1120;font-family:var(--disp);font-size:13px}
+  table.cmp tbody th{font-family:var(--mono);font-size:11px;letter-spacing:.5px;color:var(--muted);font-weight:400;width:20%}
+  table.cmp td.g{color:var(--green)} table.cmp td.o{color:var(--warn)} table.cmp td.r{color:var(--danger)}
+  .src{font-size:12.5px;color:var(--muted);margin:6px 0 0}
+  .gauge{margin:12px 0}
+  .gauge .row{display:grid;grid-template-columns:minmax(0,230px) 1fr auto;gap:10px;align-items:center;margin:9px 0;font-size:13.5px}
+  .gauge .trk{height:14px;border-radius:99px;background:#101a2b;border:1px solid var(--line);position:relative;overflow:hidden}
+  .gauge .trk i{display:block;height:100%;border-radius:99px;width:0;transition:width .9s ease}
+  .gauge .lim{position:absolute;top:0;bottom:0;width:2px;background:var(--gold)}
+  .gauge .ok i{background:var(--green)} .gauge .ko i{background:var(--danger)}
+  .gauge .v{font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap}
+  .gauge .legendline{font-family:var(--mono);font-size:11px;color:var(--gold)}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 0}
+  .tabs button{font-family:var(--disp);font-weight:600;font-size:13px;background:var(--bg2);color:var(--muted);border:1px solid var(--line2);border-bottom:none;border-radius:9px 9px 0 0;padding:9px 13px;cursor:pointer}
+  .tabs button[aria-selected="true"]{background:#060b14;color:var(--fg);border-color:var(--blue)}
+  .tabpane{border:1px solid var(--line2);border-radius:0 10px 10px 10px;background:#060b14;padding:12px 14px}
+  ul.chk{list-style:none;padding:0;margin:12px 0;display:grid;gap:7px}
+  ul.chk li{border:1px solid var(--line);border-radius:9px;background:var(--bg2);padding:9px 12px;font-size:13.5px;animation:rise .35s ease}
+  ul.chk li.ok{border-color:rgba(52,216,160,.35)} ul.chk li.ko{border-color:rgba(255,176,32,.45)}
+  ul.chk li.ok b{color:var(--green)} ul.chk li.ko b{color:var(--warn)}
+  .live{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--green);margin-right:7px;animation:blink 1s infinite}
+  @keyframes blink{50%{opacity:.25}}
+  body.proj ol.steps{font-size:20px} body.proj table.cmp{font-size:17px} body.proj .term pre{font-size:18px}
+  @media(max-width:760px){.toolart{grid-auto-flow:column}.toolart span{width:48px;height:48px;font-size:22px}.gauge .row{grid-template-columns:1fr}.hubgrid{grid-template-columns:1fr}}
+  @media print{
+    #printFiche .md h2{font-size:13pt;margin:5mm 0 2mm} #printFiche .md h3{font-size:11.5pt;color:#00334D;margin:4mm 0 1.5mm}
+    #printFiche .md p{font-size:11pt;margin:0 0 2.2mm} #printFiche .md ul,#printFiche .md ol{list-style:revert;padding-left:6mm;margin:0 0 2.2mm;font-size:11pt}
+    #printFiche .md th{width:auto}
+  }
+</style>
+</head>
+<body>
+<header class="bar"><div class="in">
+  <div class="logo" aria-hidden="true">TP</div>
+  <div class="brand">TP technique · IA locale<small>ATELIER 06 · J'INSTALLE, JE PRODUIS</small></div>
+  <div class="prog"><span class="txt" id="progtxt">0 / 12</span><div class="track" aria-hidden="true"><i id="progbar"></i></div>
+    <button class="tgl" id="projBtn" aria-pressed="false" title="Agrandir pour le vidéoprojecteur">Projection</button></div>
+</div></header>
+
+<main class="wrap">
+  <section id="home">
+    <div class="hero">
+      <div class="herotext">
+        <p class="eyebrow">Atelier pratique · on installe, on produit</p>
+        <h1>Mon IA tourne <span class="g">chez moi.</span></h1>
+        <p class="lede">Installer un moteur d'IA sur son ordinateur, y charger un modèle, en faire un collègue de SVT, le nourrir avec des données ouvertes, puis produire une activité de classe. Le modèle calcule sur votre machine : aucune question ne part sur Internet.</p>
+        <div class="meta">
+          <span class="chip">⏱ <b>45 à 60 min</b></span><span class="chip">👥 <b>en binôme</b></span><span class="chip">💾 <b>5 à 8 Go libres</b></span><span class="chip">📡 <b>Internet : pour télécharger seulement</b></span>
+        </div>
+      </div>
+      <div class="toolart" aria-hidden="true"><span>🧠</span><span>💻</span><span>🐧</span></div>
+    </div>
+    <div class="partners"><span class="t">Une action</span><span class="nm">Master ACAI · Université de Guyane</span><span class="nm">Maison pour la science en Guyane</span><span class="nm">HACK'MAZONE</span></div>
+
+    <div id="posteHome"></div>
+
+    <h2 class="section-h">Cinq salles, un bonus</h2>
+    <p class="section-s">Chaque porte se valide avec ce que vous lisez sur votre écran. Installation impossible sur votre poste ? Suivez l'écran de l'animateur : les réponses y figurent, et la salle 5 peut se brancher sur son ordinateur.</p>
+    <div class="hubgrid" id="hubgrid"></div>
+
+    <div class="modwin" id="allwin" hidden>
+      <h2>🎓 TP terminé</h2>
+      <p>Vous avez une IA qui tourne sur votre ordinateur et une activité relue. Quatre idées à garder.</p>
+      <div class="reflex">
+        <div class="r"><b>1</b><span><b style="font-family:inherit;color:var(--fg)">Avant d'installer, je vérifie la source</b> : site de l'éditeur, licence, taille.</span></div>
+        <div class="r"><b>2</b><span><b style="font-family:inherit;color:var(--fg)">Local ne veut pas dire infaillible</b> : je relis tout, chiffres en tête.</span></div>
+        <div class="r"><b>3</b><span><b style="font-family:inherit;color:var(--fg)">Local ne dispense pas de trier</b> : pas de nom, de note ni de santé sur un poste personnel.</span></div>
+        <div class="r"><b>4</b><span><b style="font-family:inherit;color:var(--fg)">L'IA propose, l'enseignant dispose</b> : c'est moi qui signe l'activité.</span></div>
+      </div>
+      <div class="flag" style="max-width:560px;margin:16px auto 0;text-align:left"><div class="fl">// code final</div><code>ACAI{MON_IA_TOURNE_CHEZ_MOI}</code></div>
+    </div>
+
+    <details class="learn" style="margin-top:22px"><summary>Antisèche des commandes</summary><div class="c" id="cheat"></div></details>
+    <details class="learn"><summary>Animateur : kit hors-ligne et partage de son moteur avec la salle</summary><div class="c" id="anim"></div></details>
+    <div class="modcta"><button class="btn ghost" id="wipeBtn">Réinitialiser la progression</button></div>
+  </section>
+
+  <section id="play" hidden>
+    <div class="playbar">
+      <button class="btn ghost" id="playBack">← Les salles</button>
+      <h2 id="playtitle"></h2>
+      <span class="pt" id="playtag"></span>
+    </div>
+    <p class="section-s" id="playintro" style="margin-top:10px"></p>
+    <div id="postePlay"></div>
+    <div class="rooms" id="rooms"></div>
+    <div class="modwin" id="modwin" hidden>
+      <h2 id="modtitle"></h2>
+      <p id="modtext"></p>
+      <div class="reflex" id="modreflex"></div>
+      <div class="modcta"><button class="btn" id="modnext"></button><button class="btn ghost" id="modback">← Les salles</button></div>
+    </div>
+  </section>
+
+  <footer>
+    <b>Repères.</b> Documentation d'Ollama (docs.ollama.com) et bibliothèque de modèles (ollama.com/library) · documentation de Claude Code (code.claude.com/docs) · jeu de données « palmerpenguins », licence CC0 · Cadre d'usage de l'IA en éducation (ministère de l'Éducation nationale, juin 2025). Commandes vérifiées le 18/11/2026 sur Ollama 0.40. Les logiciels évoluent vite : en cas d'écart, la documentation officielle fait foi.
+  </footer>
+</main>
+<div id="printFiche"></div>
+
+<script>
+/* ============ DONNÉES : jeu « palmerpenguins » (CC0), fichier d'origine non modifié ============ */
+const CSV_SRC=`species,island,bill_length_mm,bill_depth_mm,flipper_length_mm,body_mass_g,sex,year
+Adelie,Torgersen,39.1,18.7,181,3750,male,2007
+Adelie,Torgersen,39.5,17.4,186,3800,female,2007
+Adelie,Torgersen,40.3,18,195,3250,female,2007
+Adelie,Torgersen,NA,NA,NA,NA,NA,2007
+Adelie,Torgersen,36.7,19.3,193,3450,female,2007
+Adelie,Torgersen,39.3,20.6,190,3650,male,2007
+Adelie,Torgersen,38.9,17.8,181,3625,female,2007
+Adelie,Torgersen,39.2,19.6,195,4675,male,2007
+Adelie,Torgersen,34.1,18.1,193,3475,NA,2007
+Adelie,Torgersen,42,20.2,190,4250,NA,2007
+Adelie,Torgersen,37.8,17.1,186,3300,NA,2007
+Adelie,Torgersen,37.8,17.3,180,3700,NA,2007
+Adelie,Torgersen,41.1,17.6,182,3200,female,2007
+Adelie,Torgersen,38.6,21.2,191,3800,male,2007
+Adelie,Torgersen,34.6,21.1,198,4400,male,2007
+Adelie,Torgersen,36.6,17.8,185,3700,female,2007
+Adelie,Torgersen,38.7,19,195,3450,female,2007
+Adelie,Torgersen,42.5,20.7,197,4500,male,2007
+Adelie,Torgersen,34.4,18.4,184,3325,female,2007
+Adelie,Torgersen,46,21.5,194,4200,male,2007
+Adelie,Biscoe,37.8,18.3,174,3400,female,2007
+Adelie,Biscoe,37.7,18.7,180,3600,male,2007
+Adelie,Biscoe,35.9,19.2,189,3800,female,2007
+Adelie,Biscoe,38.2,18.1,185,3950,male,2007
+Adelie,Biscoe,38.8,17.2,180,3800,male,2007
+Adelie,Biscoe,35.3,18.9,187,3800,female,2007
+Adelie,Biscoe,40.6,18.6,183,3550,male,2007
+Adelie,Biscoe,40.5,17.9,187,3200,female,2007
+Adelie,Biscoe,37.9,18.6,172,3150,female,2007
+Adelie,Biscoe,40.5,18.9,180,3950,male,2007
+Adelie,Dream,39.5,16.7,178,3250,female,2007
+Adelie,Dream,37.2,18.1,178,3900,male,2007
+Adelie,Dream,39.5,17.8,188,3300,female,2007
+Adelie,Dream,40.9,18.9,184,3900,male,2007
+Adelie,Dream,36.4,17,195,3325,female,2007
+Adelie,Dream,39.2,21.1,196,4150,male,2007
+Adelie,Dream,38.8,20,190,3950,male,2007
+Adelie,Dream,42.2,18.5,180,3550,female,2007
+Adelie,Dream,37.6,19.3,181,3300,female,2007
+Adelie,Dream,39.8,19.1,184,4650,male,2007
+Adelie,Dream,36.5,18,182,3150,female,2007
+Adelie,Dream,40.8,18.4,195,3900,male,2007
+Adelie,Dream,36,18.5,186,3100,female,2007
+Adelie,Dream,44.1,19.7,196,4400,male,2007
+Adelie,Dream,37,16.9,185,3000,female,2007
+Adelie,Dream,39.6,18.8,190,4600,male,2007
+Adelie,Dream,41.1,19,182,3425,male,2007
+Adelie,Dream,37.5,18.9,179,2975,NA,2007
+Adelie,Dream,36,17.9,190,3450,female,2007
+Adelie,Dream,42.3,21.2,191,4150,male,2007
+Adelie,Biscoe,39.6,17.7,186,3500,female,2008
+Adelie,Biscoe,40.1,18.9,188,4300,male,2008
+Adelie,Biscoe,35,17.9,190,3450,female,2008
+Adelie,Biscoe,42,19.5,200,4050,male,2008
+Adelie,Biscoe,34.5,18.1,187,2900,female,2008
+Adelie,Biscoe,41.4,18.6,191,3700,male,2008
+Adelie,Biscoe,39,17.5,186,3550,female,2008
+Adelie,Biscoe,40.6,18.8,193,3800,male,2008
+Adelie,Biscoe,36.5,16.6,181,2850,female,2008
+Adelie,Biscoe,37.6,19.1,194,3750,male,2008
+Adelie,Biscoe,35.7,16.9,185,3150,female,2008
+Adelie,Biscoe,41.3,21.1,195,4400,male,2008
+Adelie,Biscoe,37.6,17,185,3600,female,2008
+Adelie,Biscoe,41.1,18.2,192,4050,male,2008
+Adelie,Biscoe,36.4,17.1,184,2850,female,2008
+Adelie,Biscoe,41.6,18,192,3950,male,2008
+Adelie,Biscoe,35.5,16.2,195,3350,female,2008
+Adelie,Biscoe,41.1,19.1,188,4100,male,2008
+Adelie,Torgersen,35.9,16.6,190,3050,female,2008
+Adelie,Torgersen,41.8,19.4,198,4450,male,2008
+Adelie,Torgersen,33.5,19,190,3600,female,2008
+Adelie,Torgersen,39.7,18.4,190,3900,male,2008
+Adelie,Torgersen,39.6,17.2,196,3550,female,2008
+Adelie,Torgersen,45.8,18.9,197,4150,male,2008
+Adelie,Torgersen,35.5,17.5,190,3700,female,2008
+Adelie,Torgersen,42.8,18.5,195,4250,male,2008
+Adelie,Torgersen,40.9,16.8,191,3700,female,2008
+Adelie,Torgersen,37.2,19.4,184,3900,male,2008
+Adelie,Torgersen,36.2,16.1,187,3550,female,2008
+Adelie,Torgersen,42.1,19.1,195,4000,male,2008
+Adelie,Torgersen,34.6,17.2,189,3200,female,2008
+Adelie,Torgersen,42.9,17.6,196,4700,male,2008
+Adelie,Torgersen,36.7,18.8,187,3800,female,2008
+Adelie,Torgersen,35.1,19.4,193,4200,male,2008
+Adelie,Dream,37.3,17.8,191,3350,female,2008
+Adelie,Dream,41.3,20.3,194,3550,male,2008
+Adelie,Dream,36.3,19.5,190,3800,male,2008
+Adelie,Dream,36.9,18.6,189,3500,female,2008
+Adelie,Dream,38.3,19.2,189,3950,male,2008
+Adelie,Dream,38.9,18.8,190,3600,female,2008
+Adelie,Dream,35.7,18,202,3550,female,2008
+Adelie,Dream,41.1,18.1,205,4300,male,2008
+Adelie,Dream,34,17.1,185,3400,female,2008
+Adelie,Dream,39.6,18.1,186,4450,male,2008
+Adelie,Dream,36.2,17.3,187,3300,female,2008
+Adelie,Dream,40.8,18.9,208,4300,male,2008
+Adelie,Dream,38.1,18.6,190,3700,female,2008
+Adelie,Dream,40.3,18.5,196,4350,male,2008
+Adelie,Dream,33.1,16.1,178,2900,female,2008
+Adelie,Dream,43.2,18.5,192,4100,male,2008
+Adelie,Biscoe,35,17.9,192,3725,female,2009
+Adelie,Biscoe,41,20,203,4725,male,2009
+Adelie,Biscoe,37.7,16,183,3075,female,2009
+Adelie,Biscoe,37.8,20,190,4250,male,2009
+Adelie,Biscoe,37.9,18.6,193,2925,female,2009
+Adelie,Biscoe,39.7,18.9,184,3550,male,2009
+Adelie,Biscoe,38.6,17.2,199,3750,female,2009
+Adelie,Biscoe,38.2,20,190,3900,male,2009
+Adelie,Biscoe,38.1,17,181,3175,female,2009
+Adelie,Biscoe,43.2,19,197,4775,male,2009
+Adelie,Biscoe,38.1,16.5,198,3825,female,2009
+Adelie,Biscoe,45.6,20.3,191,4600,male,2009
+Adelie,Biscoe,39.7,17.7,193,3200,female,2009
+Adelie,Biscoe,42.2,19.5,197,4275,male,2009
+Adelie,Biscoe,39.6,20.7,191,3900,female,2009
+Adelie,Biscoe,42.7,18.3,196,4075,male,2009
+Adelie,Torgersen,38.6,17,188,2900,female,2009
+Adelie,Torgersen,37.3,20.5,199,3775,male,2009
+Adelie,Torgersen,35.7,17,189,3350,female,2009
+Adelie,Torgersen,41.1,18.6,189,3325,male,2009
+Adelie,Torgersen,36.2,17.2,187,3150,female,2009
+Adelie,Torgersen,37.7,19.8,198,3500,male,2009
+Adelie,Torgersen,40.2,17,176,3450,female,2009
+Adelie,Torgersen,41.4,18.5,202,3875,male,2009
+Adelie,Torgersen,35.2,15.9,186,3050,female,2009
+Adelie,Torgersen,40.6,19,199,4000,male,2009
+Adelie,Torgersen,38.8,17.6,191,3275,female,2009
+Adelie,Torgersen,41.5,18.3,195,4300,male,2009
+Adelie,Torgersen,39,17.1,191,3050,female,2009
+Adelie,Torgersen,44.1,18,210,4000,male,2009
+Adelie,Torgersen,38.5,17.9,190,3325,female,2009
+Adelie,Torgersen,43.1,19.2,197,3500,male,2009
+Adelie,Dream,36.8,18.5,193,3500,female,2009
+Adelie,Dream,37.5,18.5,199,4475,male,2009
+Adelie,Dream,38.1,17.6,187,3425,female,2009
+Adelie,Dream,41.1,17.5,190,3900,male,2009
+Adelie,Dream,35.6,17.5,191,3175,female,2009
+Adelie,Dream,40.2,20.1,200,3975,male,2009
+Adelie,Dream,37,16.5,185,3400,female,2009
+Adelie,Dream,39.7,17.9,193,4250,male,2009
+Adelie,Dream,40.2,17.1,193,3400,female,2009
+Adelie,Dream,40.6,17.2,187,3475,male,2009
+Adelie,Dream,32.1,15.5,188,3050,female,2009
+Adelie,Dream,40.7,17,190,3725,male,2009
+Adelie,Dream,37.3,16.8,192,3000,female,2009
+Adelie,Dream,39,18.7,185,3650,male,2009
+Adelie,Dream,39.2,18.6,190,4250,male,2009
+Adelie,Dream,36.6,18.4,184,3475,female,2009
+Adelie,Dream,36,17.8,195,3450,female,2009
+Adelie,Dream,37.8,18.1,193,3750,male,2009
+Adelie,Dream,36,17.1,187,3700,female,2009
+Adelie,Dream,41.5,18.5,201,4000,male,2009
+Gentoo,Biscoe,46.1,13.2,211,4500,female,2007
+Gentoo,Biscoe,50,16.3,230,5700,male,2007
+Gentoo,Biscoe,48.7,14.1,210,4450,female,2007
+Gentoo,Biscoe,50,15.2,218,5700,male,2007
+Gentoo,Biscoe,47.6,14.5,215,5400,male,2007
+Gentoo,Biscoe,46.5,13.5,210,4550,female,2007
+Gentoo,Biscoe,45.4,14.6,211,4800,female,2007
+Gentoo,Biscoe,46.7,15.3,219,5200,male,2007
+Gentoo,Biscoe,43.3,13.4,209,4400,female,2007
+Gentoo,Biscoe,46.8,15.4,215,5150,male,2007
+Gentoo,Biscoe,40.9,13.7,214,4650,female,2007
+Gentoo,Biscoe,49,16.1,216,5550,male,2007
+Gentoo,Biscoe,45.5,13.7,214,4650,female,2007
+Gentoo,Biscoe,48.4,14.6,213,5850,male,2007
+Gentoo,Biscoe,45.8,14.6,210,4200,female,2007
+Gentoo,Biscoe,49.3,15.7,217,5850,male,2007
+Gentoo,Biscoe,42,13.5,210,4150,female,2007
+Gentoo,Biscoe,49.2,15.2,221,6300,male,2007
+Gentoo,Biscoe,46.2,14.5,209,4800,female,2007
+Gentoo,Biscoe,48.7,15.1,222,5350,male,2007
+Gentoo,Biscoe,50.2,14.3,218,5700,male,2007
+Gentoo,Biscoe,45.1,14.5,215,5000,female,2007
+Gentoo,Biscoe,46.5,14.5,213,4400,female,2007
+Gentoo,Biscoe,46.3,15.8,215,5050,male,2007
+Gentoo,Biscoe,42.9,13.1,215,5000,female,2007
+Gentoo,Biscoe,46.1,15.1,215,5100,male,2007
+Gentoo,Biscoe,44.5,14.3,216,4100,NA,2007
+Gentoo,Biscoe,47.8,15,215,5650,male,2007
+Gentoo,Biscoe,48.2,14.3,210,4600,female,2007
+Gentoo,Biscoe,50,15.3,220,5550,male,2007
+Gentoo,Biscoe,47.3,15.3,222,5250,male,2007
+Gentoo,Biscoe,42.8,14.2,209,4700,female,2007
+Gentoo,Biscoe,45.1,14.5,207,5050,female,2007
+Gentoo,Biscoe,59.6,17,230,6050,male,2007
+Gentoo,Biscoe,49.1,14.8,220,5150,female,2008
+Gentoo,Biscoe,48.4,16.3,220,5400,male,2008
+Gentoo,Biscoe,42.6,13.7,213,4950,female,2008
+Gentoo,Biscoe,44.4,17.3,219,5250,male,2008
+Gentoo,Biscoe,44,13.6,208,4350,female,2008
+Gentoo,Biscoe,48.7,15.7,208,5350,male,2008
+Gentoo,Biscoe,42.7,13.7,208,3950,female,2008
+Gentoo,Biscoe,49.6,16,225,5700,male,2008
+Gentoo,Biscoe,45.3,13.7,210,4300,female,2008
+Gentoo,Biscoe,49.6,15,216,4750,male,2008
+Gentoo,Biscoe,50.5,15.9,222,5550,male,2008
+Gentoo,Biscoe,43.6,13.9,217,4900,female,2008
+Gentoo,Biscoe,45.5,13.9,210,4200,female,2008
+Gentoo,Biscoe,50.5,15.9,225,5400,male,2008
+Gentoo,Biscoe,44.9,13.3,213,5100,female,2008
+Gentoo,Biscoe,45.2,15.8,215,5300,male,2008
+Gentoo,Biscoe,46.6,14.2,210,4850,female,2008
+Gentoo,Biscoe,48.5,14.1,220,5300,male,2008
+Gentoo,Biscoe,45.1,14.4,210,4400,female,2008
+Gentoo,Biscoe,50.1,15,225,5000,male,2008
+Gentoo,Biscoe,46.5,14.4,217,4900,female,2008
+Gentoo,Biscoe,45,15.4,220,5050,male,2008
+Gentoo,Biscoe,43.8,13.9,208,4300,female,2008
+Gentoo,Biscoe,45.5,15,220,5000,male,2008
+Gentoo,Biscoe,43.2,14.5,208,4450,female,2008
+Gentoo,Biscoe,50.4,15.3,224,5550,male,2008
+Gentoo,Biscoe,45.3,13.8,208,4200,female,2008
+Gentoo,Biscoe,46.2,14.9,221,5300,male,2008
+Gentoo,Biscoe,45.7,13.9,214,4400,female,2008
+Gentoo,Biscoe,54.3,15.7,231,5650,male,2008
+Gentoo,Biscoe,45.8,14.2,219,4700,female,2008
+Gentoo,Biscoe,49.8,16.8,230,5700,male,2008
+Gentoo,Biscoe,46.2,14.4,214,4650,NA,2008
+Gentoo,Biscoe,49.5,16.2,229,5800,male,2008
+Gentoo,Biscoe,43.5,14.2,220,4700,female,2008
+Gentoo,Biscoe,50.7,15,223,5550,male,2008
+Gentoo,Biscoe,47.7,15,216,4750,female,2008
+Gentoo,Biscoe,46.4,15.6,221,5000,male,2008
+Gentoo,Biscoe,48.2,15.6,221,5100,male,2008
+Gentoo,Biscoe,46.5,14.8,217,5200,female,2008
+Gentoo,Biscoe,46.4,15,216,4700,female,2008
+Gentoo,Biscoe,48.6,16,230,5800,male,2008
+Gentoo,Biscoe,47.5,14.2,209,4600,female,2008
+Gentoo,Biscoe,51.1,16.3,220,6000,male,2008
+Gentoo,Biscoe,45.2,13.8,215,4750,female,2008
+Gentoo,Biscoe,45.2,16.4,223,5950,male,2008
+Gentoo,Biscoe,49.1,14.5,212,4625,female,2009
+Gentoo,Biscoe,52.5,15.6,221,5450,male,2009
+Gentoo,Biscoe,47.4,14.6,212,4725,female,2009
+Gentoo,Biscoe,50,15.9,224,5350,male,2009
+Gentoo,Biscoe,44.9,13.8,212,4750,female,2009
+Gentoo,Biscoe,50.8,17.3,228,5600,male,2009
+Gentoo,Biscoe,43.4,14.4,218,4600,female,2009
+Gentoo,Biscoe,51.3,14.2,218,5300,male,2009
+Gentoo,Biscoe,47.5,14,212,4875,female,2009
+Gentoo,Biscoe,52.1,17,230,5550,male,2009
+Gentoo,Biscoe,47.5,15,218,4950,female,2009
+Gentoo,Biscoe,52.2,17.1,228,5400,male,2009
+Gentoo,Biscoe,45.5,14.5,212,4750,female,2009
+Gentoo,Biscoe,49.5,16.1,224,5650,male,2009
+Gentoo,Biscoe,44.5,14.7,214,4850,female,2009
+Gentoo,Biscoe,50.8,15.7,226,5200,male,2009
+Gentoo,Biscoe,49.4,15.8,216,4925,male,2009
+Gentoo,Biscoe,46.9,14.6,222,4875,female,2009
+Gentoo,Biscoe,48.4,14.4,203,4625,female,2009
+Gentoo,Biscoe,51.1,16.5,225,5250,male,2009
+Gentoo,Biscoe,48.5,15,219,4850,female,2009
+Gentoo,Biscoe,55.9,17,228,5600,male,2009
+Gentoo,Biscoe,47.2,15.5,215,4975,female,2009
+Gentoo,Biscoe,49.1,15,228,5500,male,2009
+Gentoo,Biscoe,47.3,13.8,216,4725,NA,2009
+Gentoo,Biscoe,46.8,16.1,215,5500,male,2009
+Gentoo,Biscoe,41.7,14.7,210,4700,female,2009
+Gentoo,Biscoe,53.4,15.8,219,5500,male,2009
+Gentoo,Biscoe,43.3,14,208,4575,female,2009
+Gentoo,Biscoe,48.1,15.1,209,5500,male,2009
+Gentoo,Biscoe,50.5,15.2,216,5000,female,2009
+Gentoo,Biscoe,49.8,15.9,229,5950,male,2009
+Gentoo,Biscoe,43.5,15.2,213,4650,female,2009
+Gentoo,Biscoe,51.5,16.3,230,5500,male,2009
+Gentoo,Biscoe,46.2,14.1,217,4375,female,2009
+Gentoo,Biscoe,55.1,16,230,5850,male,2009
+Gentoo,Biscoe,44.5,15.7,217,4875,NA,2009
+Gentoo,Biscoe,48.8,16.2,222,6000,male,2009
+Gentoo,Biscoe,47.2,13.7,214,4925,female,2009
+Gentoo,Biscoe,NA,NA,NA,NA,NA,2009
+Gentoo,Biscoe,46.8,14.3,215,4850,female,2009
+Gentoo,Biscoe,50.4,15.7,222,5750,male,2009
+Gentoo,Biscoe,45.2,14.8,212,5200,female,2009
+Gentoo,Biscoe,49.9,16.1,213,5400,male,2009
+Chinstrap,Dream,46.5,17.9,192,3500,female,2007
+Chinstrap,Dream,50,19.5,196,3900,male,2007
+Chinstrap,Dream,51.3,19.2,193,3650,male,2007
+Chinstrap,Dream,45.4,18.7,188,3525,female,2007
+Chinstrap,Dream,52.7,19.8,197,3725,male,2007
+Chinstrap,Dream,45.2,17.8,198,3950,female,2007
+Chinstrap,Dream,46.1,18.2,178,3250,female,2007
+Chinstrap,Dream,51.3,18.2,197,3750,male,2007
+Chinstrap,Dream,46,18.9,195,4150,female,2007
+Chinstrap,Dream,51.3,19.9,198,3700,male,2007
+Chinstrap,Dream,46.6,17.8,193,3800,female,2007
+Chinstrap,Dream,51.7,20.3,194,3775,male,2007
+Chinstrap,Dream,47,17.3,185,3700,female,2007
+Chinstrap,Dream,52,18.1,201,4050,male,2007
+Chinstrap,Dream,45.9,17.1,190,3575,female,2007
+Chinstrap,Dream,50.5,19.6,201,4050,male,2007
+Chinstrap,Dream,50.3,20,197,3300,male,2007
+Chinstrap,Dream,58,17.8,181,3700,female,2007
+Chinstrap,Dream,46.4,18.6,190,3450,female,2007
+Chinstrap,Dream,49.2,18.2,195,4400,male,2007
+Chinstrap,Dream,42.4,17.3,181,3600,female,2007
+Chinstrap,Dream,48.5,17.5,191,3400,male,2007
+Chinstrap,Dream,43.2,16.6,187,2900,female,2007
+Chinstrap,Dream,50.6,19.4,193,3800,male,2007
+Chinstrap,Dream,46.7,17.9,195,3300,female,2007
+Chinstrap,Dream,52,19,197,4150,male,2007
+Chinstrap,Dream,50.5,18.4,200,3400,female,2008
+Chinstrap,Dream,49.5,19,200,3800,male,2008
+Chinstrap,Dream,46.4,17.8,191,3700,female,2008
+Chinstrap,Dream,52.8,20,205,4550,male,2008
+Chinstrap,Dream,40.9,16.6,187,3200,female,2008
+Chinstrap,Dream,54.2,20.8,201,4300,male,2008
+Chinstrap,Dream,42.5,16.7,187,3350,female,2008
+Chinstrap,Dream,51,18.8,203,4100,male,2008
+Chinstrap,Dream,49.7,18.6,195,3600,male,2008
+Chinstrap,Dream,47.5,16.8,199,3900,female,2008
+Chinstrap,Dream,47.6,18.3,195,3850,female,2008
+Chinstrap,Dream,52,20.7,210,4800,male,2008
+Chinstrap,Dream,46.9,16.6,192,2700,female,2008
+Chinstrap,Dream,53.5,19.9,205,4500,male,2008
+Chinstrap,Dream,49,19.5,210,3950,male,2008
+Chinstrap,Dream,46.2,17.5,187,3650,female,2008
+Chinstrap,Dream,50.9,19.1,196,3550,male,2008
+Chinstrap,Dream,45.5,17,196,3500,female,2008
+Chinstrap,Dream,50.9,17.9,196,3675,female,2009
+Chinstrap,Dream,50.8,18.5,201,4450,male,2009
+Chinstrap,Dream,50.1,17.9,190,3400,female,2009
+Chinstrap,Dream,49,19.6,212,4300,male,2009
+Chinstrap,Dream,51.5,18.7,187,3250,male,2009
+Chinstrap,Dream,49.8,17.3,198,3675,female,2009
+Chinstrap,Dream,48.1,16.4,199,3325,female,2009
+Chinstrap,Dream,51.4,19,201,3950,male,2009
+Chinstrap,Dream,45.7,17.3,193,3600,female,2009
+Chinstrap,Dream,50.7,19.7,203,4050,male,2009
+Chinstrap,Dream,42.5,17.3,187,3350,female,2009
+Chinstrap,Dream,52.2,18.8,197,3450,male,2009
+Chinstrap,Dream,45.2,16.6,191,3250,female,2009
+Chinstrap,Dream,49.3,19.9,203,4050,male,2009
+Chinstrap,Dream,50.2,18.8,202,3800,male,2009
+Chinstrap,Dream,45.6,19.4,194,3525,female,2009
+Chinstrap,Dream,51.9,19.5,206,3950,male,2009
+Chinstrap,Dream,46.8,16.5,189,3650,female,2009
+Chinstrap,Dream,45.7,17,195,3650,female,2009
+Chinstrap,Dream,55.8,19.8,207,4000,male,2009
+Chinstrap,Dream,43.5,18.1,202,3400,female,2009
+Chinstrap,Dream,49.6,18.2,193,3775,male,2009
+Chinstrap,Dream,50.8,19,210,4100,male,2009
+Chinstrap,Dream,50.2,18.7,198,3775,female,2009`;
+const SPK=["Adelie","Chinstrap","Gentoo"];
+const SP={Adelie:"Adélie",Chinstrap:"à jugulaire",Gentoo:"papou"};
+const SX={male:"mâle",female:"femelle"};
+const HEAD_FR=["espece","ile","longueur_bec_mm","hauteur_bec_mm","longueur_aileron_mm","masse_g","sexe","annee"];
+const ROWS=CSV_SRC.trim().split(/\r?\n/).slice(1).map(l=>{const c=l.split(","),n=v=>(v==="NA"||v==="")?null:parseFloat(v);return{sp:c[0],isl:c[1],bl:n(c[2]),bd:n(c[3]),fl:n(c[4]),bm:n(c[5]),sex:c[6]==="NA"?null:c[6],yr:c[7]};});
+const mean=a=>a.reduce((x,y)=>x+y,0)/a.length;
+const f1=x=>x.toFixed(1).replace(".",","),f0=x=>String(Math.round(x));
+const STATS=SPK.map(k=>{const r=ROWS.filter(x=>x.sp===k),m=f=>mean(r.map(f).filter(v=>v!=null)),bs=s=>mean(r.filter(x=>x.sex===s&&x.bm!=null).map(x=>x.bm));
+  return{k:k,n:r.length,bl:m(x=>x.bl),bd:m(x=>x.bd),fl:m(x=>x.fl),bm:m(x=>x.bm),bmF:bs("female"),bmM:bs("male")};});
+const NTOT=ROWS.length,NNOMES=ROWS.filter(x=>x.bm==null).length,NNOSEX=ROWS.filter(x=>x.sex==null).length;
+function frRow(x){const d=v=>v==null?"":String(v).replace(".",",");return[SP[x.sp],x.isl,d(x.bl),d(x.bd),d(x.fl),d(x.bm),x.sex?SX[x.sex]:"",x.yr];}
+function frCsv(){return"\uFEFF"+[HEAD_FR.join(";")].concat(ROWS.map(x=>frRow(x).join(";"))).join("\r\n")+"\r\n";}
+function sampleRows(){const out=[];SPK.forEach(k=>["female","male"].forEach(s=>{const r=ROWS.filter(x=>x.sp===k&&x.sex===s&&x.bl!=null);[Math.floor(r.length*0.2),Math.floor(r.length*0.7)].forEach(i=>out.push(r[i]));}));return out;}
+function extractText(){
+  const L=[],smp=sampleRows();
+  L.push("JEU DE DONNÉES : manchots de l'archipel Palmer (Antarctique), mesurés de 2007 à 2009.");
+  L.push("Source : K. Gorman et station de recherche Palmer (LTER) ; paquet « palmerpenguins » (Horst, Hill et Gorman, 2020). Licence CC0.");
+  L.push("Colonnes : "+HEAD_FR.join(" ; ")+".");
+  L.push("Effectif total : "+NTOT+" manchots, dont "+NNOMES+" sans mesures et "+NNOSEX+" de sexe inconnu.");
+  L.push("");L.push("Moyennes par espèce :");
+  L.push("espece ; effectif ; longueur_bec_mm ; hauteur_bec_mm ; longueur_aileron_mm ; masse_g");
+  STATS.forEach(s=>L.push([SP[s.k],s.n,f1(s.bl),f1(s.bd),f1(s.fl),f0(s.bm)].join(" ; ")));
+  L.push("");L.push("Masse moyenne selon le sexe, en grammes :");
+  STATS.forEach(s=>L.push(SP[s.k]+" : femelles "+f0(s.bmF)+" ; mâles "+f0(s.bmM)));
+  L.push("");L.push("Extrait ("+smp.length+" lignes sur "+NTOT+") :");
+  L.push(HEAD_FR.join(" ; "));smp.forEach(x=>L.push(frRow(x).join(" ; ")));
+  return L.join("\n");
+}
+
+/* ============ POSTE : système et mémoire ============ */
+const OS={
+ win:{n:"Windows",term:"PowerShell",open:"touche Windows, tapez « PowerShell », puis Entrée",dl:"cd $HOME\\Downloads"},
+ mac:{n:"macOS",term:"Terminal",open:"Cmd + Espace, tapez « Terminal », puis Entrée",dl:"cd ~/Downloads"},
+ lin:{n:"Linux",term:"Terminal",open:"Ctrl + Alt + T",dl:"cd ~/Téléchargements"}};
+const TIER={
+ lo:{n:"moins de 8 Go",m:"gemma3:1b",sz:"815 Mo",disk:5,ctx:4096},
+ mid:{n:"8 Go",m:"gemma3:4b",sz:"3,3 Go",disk:8,ctx:4096},
+ hi:{n:"16 Go ou plus",m:"gemma3:4b",sz:"3,3 Go",disk:8,ctx:8192}};
+const M=()=>TIER[st.tier].m;
+
+/* ============ SALLES ============ */
+const ROOMS=[
+ {id:"mot",emo:"⚙️",k:"Salle 1 · Le moteur",name:"Installer Ollama",desc:"Un modèle d'IA est un fichier. Pour le faire parler, il faut un moteur.",n:3,flag:"ACAI{MOTEUR_INSTALLE}",
+  intro:"Ollama est un logiciel libre (licence MIT) qui s'installe comme un programme ordinaire et fait tourner un modèle d'IA sur votre ordinateur.",
+  done:"Ce que la manipulation a montré.",reflex:[["1","Un logiciel d'IA s'installe <b>depuis le site de son éditeur</b>, pas depuis un lien reçu par message."],["2","Par défaut, le moteur n'écoute que <b>votre ordinateur</b> : personne d'autre ne peut l'interroger."]]},
+ {id:"mod",emo:"🧠",k:"Salle 2 · Le modèle",name:"Télécharger, questionner, couper le Wi-Fi",desc:"Charger Gemma 3, lui parler, puis prouver qu'il fonctionne sans Internet.",n:3,flag:"ACAI{MODELE_LOCAL_SANS_RESEAU}",
+  intro:"Le moteur est vide. Il lui faut un modèle : le fichier qui contient ce que l'IA a retenu de son entraînement. Nous prenons Gemma 3, publié par Google et distribué dans la bibliothèque d'Ollama.",
+  done:"Ce que la manipulation a montré.",reflex:[["1","Le modèle est <b>un fichier sur votre disque</b> : pas de compte, pas d'abonnement."],["2","Wi-Fi coupé, il répond encore : <b>la question ne quitte pas la machine</b>."],["3","Attention aux modèles marqués <b>« cloud »</b> : eux calculent sur Internet."]]},
+ {id:"ast",emo:"🧑‍🏫",k:"Salle 3 · L'assistant",name:"Fabriquer « Prof SVT »",desc:"Donner au modèle un rôle, des règles et une trame de fiche de préparation.",n:2,flag:"ACAI{ASSISTANT_PROF_SVT}",
+  intro:"Gemma est généraliste. Pour obtenir un assistant « du domaine de l'enseignement », on ne le réentraîne pas : on lui écrit une fiche de poste, dans un fichier texte.",
+  done:"Ce que la manipulation a montré.",reflex:[["1","Spécialiser une IA, c'est <b>écrire ses consignes</b> : un fichier lisible, corrigeable, partageable."],["2","L'étiquette « éducation » d'un modèle <b>ne garantit rien</b> : on le juge sur pièces."]]},
+ {id:"dat",emo:"🐧",k:"Salle 4 · Les données",name:"Un jeu de données libre",desc:"Des mesures réelles, sous licence libre, sans aucune personne dedans.",n:2,flag:"ACAI{DONNEES_LIBRES_VERIFIEES}",
+  intro:"Une IA locale ne connaît ni votre classe ni votre terrain. Elle travaille bien quand on lui fournit des données. Au feu tricolore, celles-ci sont au vert : des mesures scientifiques publiées, sans aucune personne dedans.",
+  done:"Ce que la manipulation a montré.",reflex:[["1","Avant d'utiliser des données : <b>qui les a produites, sous quelle licence, y a-t-il des personnes ?</b>"],["2","L'IA reçoit <b>un résumé et un extrait</b> ; les élèves reçoivent le fichier complet."],["3","Les calculs se font <b>dans le tableur</b> : un modèle de langage calcule mal."]]},
+ {id:"act",emo:"📝",k:"Salle 5 · L'activité",name:"Produire, puis relire",desc:"Composer la demande, lancer la production, contrôler chaque chiffre.",n:2,flag:"ACAI{ACTIVITE_PRODUITE_ET_RELUE}",
+  intro:"Tout est prêt : le moteur, le modèle, l'assistant, les données. Reste à demander l'activité, puis à faire le travail que l'IA ne fera pas : relire.",
+  done:"Ce que la manipulation a montré.",reflex:[["1","Une bonne demande dit <b>pour qui, combien de temps, avec quelles données, sous quelle forme</b>."],["2","La relecture n'est pas une option : <b>chiffres, vocabulaire, source</b>."]]},
+ {id:"bon",bonus:true,emo:"🧩",k:"Bonus · Aller plus loin",name:"Claude Code et les skills de GitHub",desc:"Un agent qui suit des modes d'emploi publiés en ligne. À lire avant d'installer.",n:3,flag:"ACAI{AVANT_D_INSTALLER_JE_LIS}",
+  intro:"Ollama fait parler un modèle. Claude Code est un outil d'un autre genre : un « agent » qui lit et écrit des fichiers sur votre ordinateur et suit des « skills », des modes d'emploi rédigés pour lui. Cette piste demande un compte payant ou une machine puissante : suivez-la sur l'écran de l'animateur.",
+  done:"Ce que la manipulation a montré.",reflex:[["1","Outil installé chez moi ne veut pas dire <b>calcul chez moi</b> : je vérifie où tourne le modèle."],["2","Une skill est du texte, parfois des scripts et des connexions : <b>avant d'installer, je lis</b>."]]}
+];
+const MAIN=ROOMS.filter(r=>!r.bonus);
+
+/* ============ ÉTAT ============ */
+const KEY="acai_tp_ia_locale_svt_v1";
+function guessOs(){const u=(navigator.userAgent||"")+" "+(navigator.platform||"");if(/Mac/i.test(u))return"mac";if(/Linux|X11/i.test(u)&&!/Android/i.test(u))return"lin";return"win";}
+function fresh(){return{mot:[false,false,false],mod:[false,false,false],ast:[false,false],dat:[false,false],act:[false,false],bon:[false,false,false],q:{},os:guessOs(),tier:"mid",disk:false,
+  mf:{pub:"c4",loc:"gf",ton:"0.4",trame:true},pr:{niv:"c4",dur:"d55",not:"vari",moda:"info"},ana:false,prev:false,way:"term",out:"",ck:[false,false,false,false,false,false],url:"http://localhost:11434",cm:""};}
+let st=fresh();
+try{const raw=localStorage.getItem(KEY);if(raw){const o=JSON.parse(raw);if(o&&o.mot&&o.mf&&o.pr){const f=fresh();st=Object.assign(f,o);st.mf=Object.assign(fresh().mf,o.mf);st.pr=Object.assign(fresh().pr,o.pr);}}}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}buildPrint();}
+const el=id=>document.getElementById(id);
+function norm(s){return(s||"").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[’`]/g,"'").replace(/\s+/g," ");}
+function esc(s){return(s==null?"":s).toString().replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function sup(s){return esc(s).replace(/ ([:;?!»])/g,"\u00A0$1").replace(/« /g,"«\u00A0").replace(/(\d+)(er|re|nd|de|e)(?![a-zà-ÿ0-9])/gi,"$1<sup>$2</sup>");}
+/* Prose : typographie française, ‹code› et **gras** */
+function P(s){return s.split(/(‹[^›]*›)/).map(g=>(g.charAt(0)==="‹"&&g.slice(-1)==="›")?'<code class="i">'+esc(g.slice(1,-1))+'</code>':sup(g).replace(/\*\*([^*]+)\*\*/g,"<b>$1</b>")).join("");}
+function term(cmds,label){const t=Array.isArray(cmds)?cmds.join("\n"):cmds;return'<div class="evi term"><div class="top"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="label">'+esc(label||OS[st.os].term)+'</span><button class="cp" type="button" data-cp="'+esc(t)+'">Copier</button></div><pre>'+esc(t)+'</pre></div>';}
+function doc(text,label,id){return'<div class="evi doc"><div class="top"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="label">'+esc(label)+'</span></div><pre'+(id?' id="'+id+'"':'')+'>'+esc(text)+'</pre></div>';}
+function copyText(t){return new Promise(res=>{const fb=()=>{try{const a=document.createElement("textarea");a.value=t;a.style.position="fixed";a.style.opacity="0";document.body.appendChild(a);a.select();const ok=document.execCommand("copy");a.remove();res(ok);}catch(e){res(false);}};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(()=>res(true),fb);else fb();});}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-cp]");if(!b)return;const lab=b.getAttribute("data-lab")||b.textContent;b.setAttribute("data-lab",lab);
+  copyText(b.getAttribute("data-cp")).then(ok=>{b.textContent=ok?"✓ Copié":"Copie impossible : sélectionnez le texte";b.classList.toggle("done",ok);setTimeout(()=>{b.textContent=lab;b.classList.remove("done");},1800);});});
+function dl(name,text,type){const b=new Blob([text],{type:type||"text/plain;charset=utf-8"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),3000);}
+function sel(id,obj,cur){return'<select class="code" id="'+id+'">'+Object.keys(obj).map(k=>'<option value="'+k+'"'+(k===cur?" selected":"")+'>'+esc(obj[k])+'</option>').join("")+'</select>';}
+let cur=-1;
+function count(){return MAIN.reduce((a,r)=>a+st[r.id].filter(Boolean).length,0);}
+function total(){return MAIN.reduce((a,r)=>a+r.n,0);}
+function paint(){const c=count(),t=total();el("progtxt").textContent=c+" / "+t;el("progbar").style.width=(100*c/t)+"%";}
+function show(id){["home","play"].forEach(x=>el(x).hidden=(x!==id));window.scrollTo({top:0,behavior:"smooth"});}
+
+/* ============ BARRE « MON POSTE » ============ */
+function posteHtml(){
+  const g=(grp,obj,cur)=>'<span class="seggrp" role="group">'+Object.keys(obj).map(k=>'<button type="button" data-'+grp+'="'+k+'" aria-pressed="'+(k===cur)+'">'+esc(obj[k].n)+'</button>').join("")+'</span>';
+  return'<div class="poste"><span class="lab">Mon poste</span>'+g("os",OS,st.os)+'<span class="lab">Mémoire vive</span>'+g("tier",TIER,st.tier)+'<span class="mdl">→ modèle : '+M()+' ('+TIER[st.tier].sz+')</span></div>';
+}
+function paintPoste(){["posteHome","postePlay"].forEach(id=>{el(id).innerHTML=posteHtml();});}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-os],[data-tier]");if(!b)return;if(b.dataset.os)st.os=b.dataset.os;else st.tier=b.dataset.tier;save();paintPoste();renderStatic();if(!el("play").hidden)render();});
+
+/* ============ HUB / PORTES ============ */
+function renderHub(){
+  const g=el("hubgrid");g.innerHTML="";
+  ROOMS.forEach((r,i)=>{
+    const d=st[r.id].filter(Boolean).length,ok=d===r.n;
+    const b=document.createElement("button");b.className="gc"+(ok?" done":"")+(r.bonus?" bonus":"");
+    b.innerHTML='<span class="emo">'+r.emo+'</span><span class="k">'+r.k+'</span><h3>'+sup(r.name)+'</h3><p>'+sup(r.desc)+'</p><div class="mini"><i style="width:'+(100*d/r.n)+'%"></i></div><span class="pstate">'+(ok?"✓ TERMINÉE":d?"● "+d+" / "+r.n:"▶ ENTRER")+'</span>';
+    b.addEventListener("click",()=>launch(i));g.appendChild(b);
+  });
+  el("allwin").hidden=count()!==total();paint();
+}
+function launch(i){cur=i;const r=ROOMS[i];el("playtitle").textContent=r.emo+" "+r.name;el("playtag").textContent=r.k.toUpperCase();el("playintro").innerHTML=sup(r.intro);el("modwin").hidden=true;show("play");render();}
+function firstUnsolved(a){const i=a.indexOf(false);return i<0?a.length:i;}
+function render(){
+  const r=ROOMS[cur],arr=st[r.id],box=el("rooms");box.innerHTML="";
+  DOORS[r.id].forEach((d,i)=>{
+    const solved=arr[i],active=i===firstUnsolved(arr);
+    const door=document.createElement("section");door.className="door "+(solved?"solved":active?"active":"locked");
+    const state=solved?'<span class="dstate st-ok">✓ OUVERTE</span>':active?'<span class="dstate st-open">● EN COURS</span>':'<span class="dstate st-lock">🔒 VERROUILLÉE</span>';
+    door.innerHTML='<div class="dhead"><div class="badge">'+(solved?"✓":String(i+1).padStart(2,"0"))+'</div><div class="dtitle"><div class="k">'+esc(r.k.split("·")[0].trim())+' · porte '+(i+1)+'</div><h2>'+sup(d.t)+'</h2></div>'+state+'</div>';
+    if(solved||active){const body=document.createElement("div");body.className="dbody";door.appendChild(body);d.build(body,solved,()=>{if(arr[i])return;arr[i]=true;afterSolve(arr);});}
+    box.appendChild(door);
+  });
+  paint();
+}
+function afterSolve(arr){save();paint();setTimeout(()=>{render();if(arr.every(Boolean))roomDone();else{const n=document.querySelector("#rooms .door.active");if(n)n.scrollIntoView({behavior:"smooth",block:"center"});}},700);}
+function roomDone(){
+  const r=ROOMS[cur];el("modwin").hidden=false;el("modtitle").textContent="✓ Salle terminée — "+r.name;el("modtext").textContent=r.done;
+  el("modreflex").innerHTML=r.reflex.map(x=>'<div class="r"><b>'+x[0]+'</b><span>'+x[1]+'</span></div>').join("")+'<div class="flag"><div class="fl">// salle terminée — code validé</div><code>'+r.flag+'</code></div>';
+  let ni=ROOMS.findIndex((x,j)=>j!==cur&&!x.bonus&&!st[x.id].every(Boolean));if(ni<0)ni=ROOMS.findIndex((x,j)=>j!==cur&&!st[x.id].every(Boolean));
+  el("modnext").hidden=ni<0;if(ni>=0){el("modnext").textContent=(ROOMS[ni].bonus?"Bonus : ":"Salle suivante : ")+ROOMS[ni].name+" →";el("modnext").onclick=()=>launch(ni);}
+  el("modwin").scrollIntoView({behavior:"smooth",block:"center"});
+}
+/* Question à réponse courte : validation, indice, réponse */
+function qa(box,key,q,test,hint,ans,ok,onOk){
+  const w=document.createElement("div");
+  if(st.q[key]){w.innerHTML='<div class="ask">'+P(q)+'</div><div class="lesson"><b>✓</b> '+P(ok)+'</div>';box.appendChild(w);return;}
+  w.innerHTML='<div class="ask">'+P(q)+'</div><div class="inrow"><span class="pre mono">&gt;</span><input class="code" data-q="'+key+'" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="votre réponse…" aria-label="réponse"><button class="btn" type="button">Valider →</button><button class="btn ghost" type="button">Indice</button><button class="btn ghost" type="button">Voir la réponse</button></div><div class="fb" aria-live="polite"></div>';
+  box.appendChild(w);
+  const inp=w.querySelector("input"),fb=w.querySelector(".fb"),bs=w.querySelectorAll("button");
+  const go=()=>{const v=norm(inp.value);if(!v){inp.focus();return;}
+    if(test(v)){st.q[key]=true;inp.classList.add("right");fb.className="fb ok";fb.textContent="✓ Exact.";save();onOk();}
+    else{inp.classList.add("wrong");fb.className="fb no";fb.textContent="✗ Pas encore. Regardez votre écran, ou demandez l'indice.";setTimeout(()=>inp.classList.remove("wrong"),450);}};
+  bs[0].addEventListener("click",go);inp.addEventListener("keydown",e=>{if(e.key==="Enter")go();});
+  bs[1].addEventListener("click",()=>{fb.className="fb hintline";fb.textContent="💡 "+hint;});
+  bs[2].addEventListener("click",()=>{fb.className="fb hintline";fb.innerHTML="👁 Réponse attendue : <b>"+esc(ans)+"</b>. Tapez-la pour ouvrir la porte.";});
+}
+/* Porte à plusieurs questions : ouverte quand toutes sont justes */
+function quiz(box,items,done){const chk=()=>{if(items.every(x=>st.q[x.k]))done();else render();};items.forEach(x=>qa(box,x.k,x.q,x.t,x.h,x.a,x.ok,chk));}
+function add(box,html){const d=document.createElement("div");d.innerHTML=html;box.appendChild(d);return d;}
+function secu(t){return'<div class="classbox"><div class="t">Réflexe sécurité</div><p>'+P(t)+'</p></div>';}
+
+/* ============ SALLE 3 : RECETTE DE L'ASSISTANT ============ */
+const PUB={c2:"école, cycle 2 (CP, CE1, CE2)",c3:"cycle 3 (CM1, CM2, 6e)",c4:"collège, cycle 4 (5e, 4e, 3e)",ly:"lycée (2de, spécialité SVT)"};
+const LOC={gf:"Guyane (forêt, littoral, fleuves)",no:"aucun ancrage particulier"};
+const TON={"0.2":"sobre et précis","0.4":"équilibré","0.8":"créatif"};
+function sysText(){
+  const L=["Tu es « Prof SVT », un assistant de préparation de cours pour des enseignants de sciences et de SVT en France. Public des élèves : "+PUB[st.mf.pub]+".",
+  "Tu réponds toujours en français, avec des phrases courtes et un vocabulaire adapté aux élèves visés.","","Règles :",
+  "1. Tu n'inventes aucune donnée chiffrée. Tu utilises uniquement les valeurs fournies dans la demande. S'il manque une information, tu l'écris clairement.",
+  "2. Tu t'appuies sur les programmes français de sciences et de SVT. Tu ne cites un texte officiel que si tu es certain de sa formulation ; sinon tu écris « à vérifier dans le programme ».",
+  "3. Tu emploies le vocabulaire scientifique exact et tu signales les faux amis (par exemple : « penguin » se traduit par « manchot », pas par « pingouin »).",
+  "4. Tu ne demandes jamais de nom d'élève, de note ni d'information de santé. Si la demande en contient, tu proposes de la reformuler sans ces éléments.",
+  "5. Tu termines chaque production par une rubrique « À vérifier par l'enseignant » qui liste les points incertains."];
+  if(st.mf.trame)L.push("","Quand on te demande une activité, tu suis cette trame : titre, niveau et durée ; objectif d'apprentissage ; prérequis ; matériel ; déroulé minuté ; consignes pour les élèves ; aide pour les élèves en difficulté et prolongement pour les plus rapides ; trace écrite ; corrigé ; évaluation en trois critères.");
+  if(st.mf.loc==="gf")L.push("","Quand c'est pertinent, tu prends des exemples dans l'environnement de la Guyane (forêt amazonienne, littoral, mangrove, fleuves), sans inventer de chiffres.");
+  return L.join("\n");
+}
+function modelfile(){const t=TIER[st.tier];return"# Modelfile : recette de l'assistant « Prof SVT »\n# Fabrication : ollama create prof-svt -f Modelfile_prof-svt.txt\nFROM "+t.m+"\nPARAMETER temperature "+st.mf.ton+"\nPARAMETER num_ctx "+t.ctx+'\nSYSTEM """\n'+sysText()+'\n"""\n';}
+function skillmd(){return'---\nname: activite-svt\ndescription: "Prépare une activité de sciences ou de SVT conforme aux programmes français, à partir de données fournies par l\'enseignant. À utiliser pour une demande d\'activité, de fiche élève ou de corrigé en SVT."\n---\n\n# Activité de SVT\n\n'+sysText().replace("Tu es « Prof SVT », un assistant de préparation de cours","Tu agis comme un assistant de préparation de cours").replace("\nRègles :","\n## Règles")+"\n";}
+
+/* ============ SALLE 5 : DEMANDE ============ */
+const NIV={c3a:"CM1-CM2 (cycle 3)",c3b:"6e (cycle 3)",c4:"5e, 4e ou 3e (cycle 4)",sec:"2de"};
+const DUR={d30:"30 minutes",d55:"55 minutes",d110:"deux séances de 55 minutes"};
+const NOT={div:"la diversité des espèces et leur classement",vari:"la variation des individus au sein d'une espèce",dim:"les différences entre mâles et femelles (dimorphisme sexuel)",graph:"lire et construire un graphique à partir de mesures"};
+const MODA={info:"en salle informatique, en binôme, avec un tableur",pap:"en classe entière, sur document papier"};
+function promptText(){return"Prépare une activité pour une classe de "+NIV[st.pr.niv]+", d'une durée de "+DUR[st.pr.dur]+".\nNotion travaillée : "+NOT[st.pr.not]+".\nOrganisation : "+MODA[st.pr.moda]+".\n\nLes élèves étudient un jeu de données réel. Le fichier complet leur sera remis ; tu n'en reçois que le résumé et un extrait, ci-dessous.\nUtilise uniquement ces valeurs. N'invente aucun chiffre. En français, « penguin » se traduit par « manchot ».\n\n"+extractText()+"\n\nProduis, dans cet ordre :\n1. la fiche élève : une situation de départ, puis 4 à 6 questions progressives, dont une demande de graphique ;\n2. le corrigé, avec les valeurs attendues ;\n3. une grille d'évaluation en trois critères.\nTermine par la rubrique « À vérifier par l'enseignant ».";}
+const SAMPLE="## Fiche élève : les pingouins de l'archipel Palmer\n\n**Situation de départ.** Des chercheurs ont mesuré 344 pingouins sur trois îles de l'Antarctique. Tu vas chercher si tous les individus d'une même espèce se ressemblent.\n\n1. Combien d'espèces le tableau contient-il ? Nomme-les.\n2. Quelle espèce a la masse moyenne la plus élevée ?\n3. Chez le manchot papou, compare la masse moyenne des femelles et celle des mâles.\n4. Dans le tableur, trace un graphique de la masse en fonction de la longueur de l'aileron.\n5. Tous les manchots Adélie ont-ils la même masse ? Justifie avec deux lignes de l'extrait.\n\n## Corrigé\n\n1. Trois espèces : Adélie, à jugulaire, papou.\n2. Le manchot papou : 6 150 g en moyenne, contre 3 701 g pour l'Adélie.\n3. Femelles : 4 680 g ; mâles : 5 485 g. Les mâles sont plus lourds.\n4. Le nuage de points monte : plus l'aileron est long, plus la masse est élevée.\n5. Non : les valeurs varient d'un individu à l'autre.\n\n## Grille d'évaluation\n\n- Lire une valeur dans un tableau.\n- Construire un graphique avec titre et unités.\n- Rédiger une conclusion appuyée sur des valeurs.";
+const CK=["Les chiffres de la fiche sont ceux du tableau : aucun n'est inventé.","Le vocabulaire scientifique est juste (« manchot », pas « pingouin »).","Le niveau, la durée et les consignes conviennent à ma classe.","La source et la licence des données figurent sur la fiche.","Aucun nom d'élève, aucune note, aucune information de santé n'a été saisi.","J'ai relu et corrigé le texte : c'est moi qui signe l'activité."];
+
+/* Contrôle automatique d'une réponse d'IA */
+function numsOf(t){t=t.replace(/(\d)[ \u00A0\u202F](?=\d{3}(?!\d))/g,"$1");const out=[],re=/\d+(?:[.,]\d+)?/g;let m;while((m=re.exec(t)))out.push({raw:m[0],val:parseFloat(m[0].replace(",","."))});return out;}
+const pl=(n,a,b)=>n+" "+(n>1?b:a);
+function knownSet(){const s=new Set();numsOf(promptText()).forEach(n=>{s.add(Math.round(n.val*10)/10);s.add(Math.round(n.val));});return s;}
+function analyse(text){
+  const known=knownSet(),res=[],ping=(text.match(/pingouin/gi)||[]).length;
+  res.push(ping?{ok:false,t:"Vocabulaire",d:"« pingouin » apparaît "+ping+" fois. En français, ces oiseaux sont des manchots : le pingouin vit dans l'hémisphère Nord et sait voler."}:{ok:true,t:"Vocabulaire",d:"Aucun « pingouin » dans le texte."});
+  const sig=numsOf(text).filter(n=>n.val>=100||/[.,]/.test(n.raw)),unk=[];
+  sig.forEach(n=>{const r=Math.round(n.val*10)/10;if(!known.has(r)&&unk.indexOf(n.raw)<0)unk.push(n.raw);});
+  res.push(unk.length?{ok:false,t:"Chiffres",d:pl(sig.length,"valeur citée","valeurs citées")+", dont "+pl(unk.length,"absente","absentes")+" des données fournies : "+unk.slice(0,10).join(" ; ")+(unk.length>10?" …":"")+". Calcul juste ou invention ? À vérifier une par une."}:{ok:true,t:"Chiffres",d:sig.length?pl(sig.length,"valeur citée, présente","valeurs citées, toutes présentes")+" dans les données fournies. Vérifiez l'espèce à laquelle chacune est attribuée.":"Aucune valeur chiffrée dans le texte : le corrigé est-il complet ?"});
+  const n=norm(text);
+  res.push(/a verifier par l'enseignant/.test(n)?{ok:true,t:"Rubrique de doute",d:"La rubrique « À vérifier par l'enseignant » est présente : lisez-la."}:{ok:false,t:"Rubrique de doute",d:"La rubrique « À vérifier par l'enseignant » manque : l'IA n'a pas suivi la consigne jusqu'au bout."});
+  res.push(/cc0|cc-0|palmer lter|gorman|horst/.test(n)?{ok:true,t:"Source",d:"La source ou la licence des données est mentionnée."}:{ok:false,t:"Source",d:"Ni source ni licence : ajoutez-les sur la fiche (Gorman, station Palmer ; palmerpenguins ; CC0)."});
+  return res;
+}
+/* Markdown minimal pour la fiche à imprimer */
+function mdHtml(src){
+  const inl=s=>sup(s).replace(/\*\*([^*]+)\*\*/g,"<b>$1</b>").replace(/(^|[^*])\*([^*]+)\*/g,"$1<i>$2</i>");
+  const out=[];let list=null,tab=null;const close=()=>{if(list){out.push("</"+list+">");list=null;}if(tab){out.push("</table>");tab=null;}};
+  src.split(/\r?\n/).forEach(l=>{const s=l.trim();let m;
+    if(!s){close();return;}
+    if((m=/^(#{1,4})\s+(.*)$/.exec(s))){close();out.push((m[1].length<=2?"<h2>":"<h3>")+inl(m[2])+(m[1].length<=2?"</h2>":"</h3>"));return;}
+    if(/^\|/.test(s)){if(/^\|[\s:|-]+\|?$/.test(s))return;if(list){out.push("</"+list+">");list=null;}const cells=s.replace(/^\||\|$/g,"").split("|").map(c=>c.trim());if(!tab){tab=true;out.push("<table><tr>"+cells.map(c=>"<th>"+inl(c)+"</th>").join("")+"</tr>");}else out.push("<tr>"+cells.map(c=>"<td>"+inl(c)+"</td>").join("")+"</tr>");return;}
+    if((m=/^[-*•]\s+(.*)$/.exec(s))){if(tab){out.push("</table>");tab=null;}if(list!=="ul"){if(list)out.push("</"+list+">");out.push("<ul>");list="ul";}out.push("<li>"+inl(m[1])+"</li>");return;}
+    if((m=/^\d+[.)]\s+(.*)$/.exec(s))){if(tab){out.push("</table>");tab=null;}if(list!=="ol"){if(list)out.push("</"+list+">");out.push("<ol>");list="ol";}out.push("<li>"+inl(m[1])+"</li>");return;}
+    close();out.push("<p>"+inl(s)+"</p>");});
+  close();return out.join("");
+}
+function buildPrint(){
+  const p=el("printFiche");if(!p)return;
+  p.innerHTML='<h1>Activité de SVT : '+sup(NOT[st.pr.not])+'</h1><p class="sub">'+sup(NIV[st.pr.niv])+' · '+sup(DUR[st.pr.dur])+' · '+sup(MODA[st.pr.moda])+'</p><div class="md">'+(st.out.trim()?mdHtml(st.out):"<p><i>Collez la réponse de l'IA dans la salle 5, corrigez-la, puis imprimez.</i></p>")+'</div><h2>Source des données</h2><p style="font-size:11pt;margin:0">Manchots de l\'archipel Palmer (Antarctique), 2007-2009. K. Gorman et station de recherche Palmer (LTER) ; paquet « palmerpenguins » (Horst, Hill et Gorman, 2020). Licence CC0.</p><p class="foot">Activité préparée avec une IA exécutée sur l\'ordinateur de l\'enseignant ('+esc(M())+', via Ollama), puis relue et corrigée par l\'enseignant. TP « Mon IA tourne chez moi » · Master ACAI, Université de Guyane · Maison pour la science en Guyane · HACK\'MAZONE.</p>';
+}
+
+/* ============ CONSOLE : interroger un moteur Ollama depuis la page ============ */
+let ctl=null;
+const base=()=>(st.url||"").trim().replace(/\/+$/,"");
+async function apiTags(){const r=await fetch(base()+"/api/tags");if(!r.ok)throw new Error("HTTP "+r.status);const j=await r.json();return(j.models||[]).map(m=>m.name);}
+async function apiChat(model,sys,user,temp,onTok){
+  ctl=new AbortController();const msgs=[];if(sys)msgs.push({role:"system",content:sys});msgs.push({role:"user",content:user});
+  const r=await fetch(base()+"/api/chat",{method:"POST",body:JSON.stringify({model:model,messages:msgs,stream:true,options:{temperature:temp}}),signal:ctl.signal});
+  if(!r.ok){let t="";try{t=(await r.json()).error||"";}catch(e){}throw new Error(t||("HTTP "+r.status));}
+  const rd=r.body.getReader(),dec=new TextDecoder();let buf="",last=null;
+  for(;;){const x=await rd.read();if(x.done)break;buf+=dec.decode(x.value,{stream:true});let i;
+    while((i=buf.indexOf("\n"))>=0){const line=buf.slice(0,i).trim();buf=buf.slice(i+1);if(!line)continue;let o;try{o=JSON.parse(line);}catch(e){continue;}
+      if(o.error)throw new Error(o.error);if(o.message&&o.message.content)onTok(o.message.content);if(o.done)last=o;}}
+  return last;
+}
+
+/* ============ PORTES ============ */
+const DOORS={
+/* ---------- SALLE 1 : LE MOTEUR ---------- */
+mot:[
+ {t:"Pré-vol : mon poste est-il prêt ?",build(b,solved,done){
+   const T=TIER[st.tier];
+   add(b,'<div class="scene"><p>'+P("Trois vérifications, deux minutes. Elles décident du modèle que votre ordinateur peut faire tourner. Réglez ensuite la barre « Mon poste », en haut de la salle.")+'</p></div><ol class="steps"><li>'+P("**Système.** "+{win:"Windows 10 (version 22H2) ou Windows 11.",mac:"macOS 14 (Sonoma) ou plus récent.",lin:"Une distribution Linux récente, en 64 bits."}[st.os])+'</li><li>'+P("**Mémoire vive (RAM).** "+{win:"Paramètres → Système → Informations système, ligne « Mémoire RAM installée ».",mac:"Menu Pomme → À propos de ce Mac, ligne « Mémoire ».",lin:"Dans un terminal : ‹free -h›, ligne « Mem », colonne « total »."}[st.os])+'</li><li>'+P("**Espace libre sur le disque.** Comptez "+T.disk+" Go : 4 Go pour le moteur, le reste pour le modèle.")+'</li></ol>'+
+   '<div class="tscroll"><table class="dt" style="white-space:normal"><tr><th>Mémoire vive</th><th>Modèle conseillé</th><th>Taille</th><th>À quoi s\'attendre (ordre de grandeur)</th></tr><tr><td>moins de 8 Go</td><td>gemma3:1b</td><td>815 Mo</td><td>Rapide, mais souvent approximatif : parfait pour exercer l\'esprit critique.</td></tr><tr><td>8 Go</td><td>gemma3:4b</td><td>3,3 Go</td><td>Bon français. Une fiche en une à quatre minutes sans carte graphique. Fermez les autres logiciels : le modèle occupe plus de 4 Go de mémoire.</td></tr><tr><td>16 Go ou plus</td><td>gemma3:4b</td><td>3,3 Go</td><td>Confortable. Avec une carte graphique récente, essayez gemma3:12b (8,1 Go).</td></tr></table></div>');
+   if(solved){add(b,'<div class="lesson"><b>✓</b> '+P("Poste réglé : "+OS[st.os].n+", "+T.n+" de mémoire vive, modèle ‹"+T.m+"›. Toutes les commandes du TP s'adaptent à ce réglage.")+'</div>');return;}
+   const w=add(b,'<label class="ck'+(st.disk?" on":"")+'"><input type="checkbox" id="diskCk"'+(st.disk?" checked":"")+'><span>'+P("J'ai réglé la barre « Mon poste » et je dispose d'au moins "+T.disk+" Go libres sur le disque.")+'</span></label><div class="tools"><button class="btn" id="posteGo" type="button">Mon poste est prêt →</button></div><div class="fb" id="posteFb"></div>');
+   w.querySelector("#diskCk").addEventListener("change",e=>{st.disk=e.target.checked;save();e.target.closest(".ck").classList.toggle("on",st.disk);});
+   w.querySelector("#posteGo").addEventListener("click",()=>{if(!st.disk){const f=w.querySelector("#posteFb");f.className="fb no";f.textContent="✗ Vérifiez d'abord l'espace libre, puis cochez la case.";return;}done();});
+ }},
+ {t:"Installer Ollama",build(b,solved,done){
+   const steps={
+    win:['Ouvrez la page officielle <b>ollama.com/download</b> et téléchargez la version Windows : <code class="i">OllamaSetup.exe</code>. Avec la clé USB de l\'animateur, copiez simplement ce fichier.','Double-cliquez dessus, puis « Install ». Le logiciel s\'installe dans votre dossier personnel : aucun mot de passe d\'administrateur n\'est demandé.','Ouvrez PowerShell ('+sup(OS.win.open)+') et tapez :'],
+    mac:['Ouvrez la page officielle <b>ollama.com/download</b> et téléchargez la version macOS : <code class="i">ollama.dmg</code>. Avec la clé USB de l\'animateur, copiez simplement ce fichier.','Ouvrez-le, glissez Ollama dans « Applications », puis lancez l\'application une première fois : elle propose d\'installer la commande <code class="i">ollama</code>. Acceptez.','Ouvrez le Terminal ('+sup(OS.mac.open)+') et tapez :'],
+    lin:['Ouvrez un terminal ('+sup(OS.lin.open)+'). Lisez d\'abord le script d\'installation officiel : <code class="i">curl -fsSL https://ollama.com/install.sh | less</code> (touche q pour sortir).','Lancez l\'installation : <code class="i">curl -fsSL https://ollama.com/install.sh | sh</code>. Le mot de passe d\'administrateur vous sera demandé.','Vérifiez :']}[st.os];
+   add(b,'<ol class="steps">'+steps.map(s=>"<li>"+s+"</li>").join("")+'</ol>'+term("ollama --version")+secu("Un logiciel se télécharge **sur le site de son éditeur**, ici ollama.com. Jamais depuis un lien reçu par message ni depuis un site qui « ressemble »."));
+   quiz(b,[{k:"m2",q:"Quel numéro de version la commande affiche-t-elle ?",t:v=>/\d+\.\d+/.test(v),h:"La réponse ressemble à « ollama version is 0.40.16 » : tapez les chiffres. Commande inconnue ? Fermez la fenêtre de terminal et rouvrez-en une. Message « could not connect » ? Lancez l'application Ollama, puis recommencez.",a:"le numéro lu à l'écran, par exemple 0.40.16",ok:"La commande répond : le moteur est installé. Pour le mettre à jour plus tard, il suffit de réinstaller la version la plus récente."}],done);
+ }},
+ {t:"Le moteur répond-il ?",build(b,solved,done){
+   add(b,'<div class="scene"><p>'+P("Ollama tourne en tâche de fond et écoute sur une « porte » numérotée de votre ordinateur : le port 11434. Ouvrez cette adresse dans un nouvel onglet :")+'</p><p><a href="http://localhost:11434" target="_blank" rel="noopener" style="font-family:var(--mono);font-size:17px">http://localhost:11434</a></p></div>');
+   quiz(b,[{k:"m3",q:"Quelle phrase s'affiche dans l'onglet ?",t:v=>v.indexOf("ollama is running")>=0,h:"Trois mots, en anglais. Page introuvable ? Lancez l'application Ollama (menu Démarrer ou Applications), puis rechargez.",a:"Ollama is running",ok:"« localhost » désigne votre propre ordinateur. Par défaut, le moteur n'écoute que lui (adresse 127.0.0.1) : aucun autre appareil du réseau ne peut l'interroger."}],done);
+ }}
+],
+/* ---------- SALLE 2 : LE MODÈLE ---------- */
+mod:[
+ {t:"Télécharger le modèle",build(b,solved,done){
+   const T=TIER[st.tier];
+   add(b,'<div class="scene"><p>'+P("Dans le terminal, demandez le modèle. Il pèse "+T.sz+" : la barre avance jusqu'au mot « success ». Selon la connexion, comptez de cinq minutes à une demi-heure.")+'</p></div>'+term("ollama pull "+T.m)+'<div class="scene"><p>'+P("Puis affichez la liste des modèles présents sur votre disque :")+'</p></div>'+term("ollama list")+
+   '<details class="learn"><summary>Sans connexion : copier le modèle depuis la clé USB de l\'animateur</summary><div class="c">'+{win:P("La clé contient un dossier ‹models›. Dans l'Explorateur de fichiers, tapez ‹%USERPROFILE%\\.ollama› dans la barre d'adresse, puis Entrée. Copiez-y le dossier ‹models› (fusionnez si Windows le propose). Relancez Ollama, puis tapez ‹ollama list›."),mac:P("La clé contient un dossier ‹models›. Dans le Finder : menu Aller → Aller au dossier…, tapez ‹~/.ollama›. Copiez-y le dossier ‹models›. Relancez Ollama, puis tapez ‹ollama list›."),lin:P("La clé contient un dossier ‹models›. Copiez-le dans ‹/usr/share/ollama/.ollama/›, puis rendez-le au moteur : ‹sudo chown -R ollama:ollama /usr/share/ollama/.ollama/models›. Tapez ensuite ‹ollama list›.")}[st.os]+'</div></details>'+
+   secu("Un modèle se choisit comme un logiciel : **source officielle, auteur identifié, licence lue**. La commande ‹ollama show "+T.m+"› affiche sa fiche et sa licence."));
+   quiz(b,[{k:"d1",q:"Dans ‹ollama list›, quelle taille la colonne SIZE indique-t-elle pour votre modèle ?",t:v=>/\d+([.,]\d+)?\s*(gb|mb|go|mo)/.test(v),h:"Un nombre suivi de GB ou de MB, par exemple 3.3 GB.",a:(st.tier==="lo"?"815 MB":"3.3 GB")+" (ce que vous lisez dans la colonne SIZE)",ok:"Ce fichier est le modèle entier : des milliards de nombres, les « paramètres ». Dans ‹"+T.m+"›, la lettre b signifie « milliard » (billion). Il ne contient ni Internet ni base de données : seulement ce qu'il a retenu de son entraînement."}],done);
+ }},
+ {t:"Première conversation",build(b,solved,done){
+   add(b,'<div class="scene"><p>'+P("Ouvrez une conversation avec le modèle. Le signe ‹>>>› indique qu'il attend votre question.")+'</p></div>'+term("ollama run "+M())+'<div class="scene"><p>'+P("Écrivez une question, puis Entrée. Par exemple :")+'</p></div>'+doc("Explique la photosynthèse à un élève de 6e en trois phrases.","à taper après >>>")+
+   '<div class="scene"><p>'+P("Observez la vitesse d'écriture et la qualité de la réponse. Tapez ensuite ‹/?› pour afficher les commandes disponibles dans la conversation.")+'</p></div>'+
+   '<details class="learn"><summary>Sans terminal : la fenêtre de l\'application · Mesurer la vitesse</summary><div class="c"><p>'+P("Sous Windows et macOS, Ollama s'ouvre aussi dans une fenêtre de discussion : choisissez ‹"+M()+"› dans la liste des modèles, écrivez, envoyez. On peut y glisser un fichier texte ou PDF.")+'</p><p>'+P("Pour mesurer la vitesse dans le terminal : tapez ‹/set verbose›, puis reposez une question. Les statistiques qui suivent la réponse donnent le nombre de tokens (morceaux de mots) écrits par seconde.")+'</p></div></details>');
+   quiz(b,[{k:"d2",q:"Quelle commande, tapée après ‹>>>›, ferme la conversation ?",t:v=>v.replace(/\s/g,"")==="/bye"||v==="bye",h:"Tapez ‹/?› : la liste s'affiche. La commande cherchée dit au revoir, en anglais.",a:"/bye",ok:"Vous venez d'interroger une IA sans compte, sans abonnement et sans envoyer un mot sur Internet. Pour repartir d'une conversation vide sans quitter : ‹/clear›."}],done);
+ }},
+ {t:"Le test avion",build(b,solved,done){
+   add(b,'<div class="scene"><p>'+P("Est-ce vraiment local ? Faites l'expérience. **Coupez le Wi-Fi** (mode avion), relancez la conversation et posez une question de votre choix.")+'</p></div>'+term("ollama run "+M())+'<div class="scene"><p>'+P("Dans une seconde fenêtre de terminal, regardez où le modèle calcule : la colonne PROCESSOR indique la part du processeur (CPU) et de la carte graphique (GPU).")+'</p></div>'+term("ollama ps"));
+   quiz(b,[{k:"d3",q:"Wi-Fi coupé, l'IA répond-elle encore ? (oui ou non)",t:v=>/^oui/.test(v),h:"Si elle ne répond plus, le modèle choisi n'est pas local : vérifiez son nom avec ‹ollama list›.",a:"oui",ok:"Preuve par l'expérience : le modèle calcule sur votre machine. Vous pouvez rester hors ligne jusqu'à la fin du TP : cette page et son jeu de données n'ont pas besoin du réseau."}],done);
+   add(b,'<div class="classbox"><div class="t">Faux ami</div><p>'+P("Dans l'application et dans la bibliothèque, certains modèles portent la mention « cloud », par exemple ‹gemma3:4b-cloud›. Ceux-là calculent sur les serveurs d'Ollama : la question part sur Internet. Un signal simple : ils exigent un compte Ollama. Si l'on vous demande de vous connecter, vous quittez le local. Pour les interdire tout à fait, on règle la variable ‹OLLAMA_NO_CLOUD=1›.")+'</p></div>');
+ }}
+],
+/* ---------- SALLE 3 : L'ASSISTANT ---------- */
+ast:[
+ {t:"Lire la recette",build(b,solved,done){
+   add(b,'<div class="scene"><p>'+P("Pour Ollama, un assistant se décrit dans un petit fichier texte appelé « Modelfile ». En voici un, réduit à l'essentiel :")+'</p></div>'+doc('FROM '+M()+'\nPARAMETER temperature 0.4\nPARAMETER num_ctx 4096\nSYSTEM """\nTu es « Prof SVT », un assistant pour enseignants de SVT.\nTu n\'inventes aucune donnée chiffrée.\n"""',"Modelfile")+
+   '<div class="tscroll"><table class="dt" style="white-space:normal"><tr><th>Ligne</th><th>Rôle</th></tr><tr><td>FROM</td><td>Le modèle de base, celui que vous venez de télécharger.</td></tr><tr><td>PARAMETER temperature</td><td>La part de fantaisie : 0 pour des réponses sages, 1 pour des réponses plus libres.</td></tr><tr><td>PARAMETER num_ctx</td><td>La mémoire de travail de la conversation, comptée en tokens (morceaux de mots).</td></tr><tr><td>SYSTEM</td><td>Les consignes permanentes : le rôle de l\'assistant et ses règles.</td></tr></table></div>'+
+   '<details class="learn"><summary>Et les modèles « spécial éducation » prêts à l\'emploi ?</summary><div class="c"><p>'+P("Ils existent, mais l'étiquette ne garantit rien. Lucie, modèle français ouvert (Linagora et OpenLLM-France) présenté comme destiné à l'éducation, a été retirée du public quelques jours après sa mise en ligne, fin janvier 2025, à la suite de réponses absurdes. Ses fichiers restent téléchargeables depuis Hugging Face :")+'</p>'+term("ollama run hf.co/OpenLLM-France/Lucie-7B-Instruct-v1.1-gguf:Q4_K_M")+'<p>'+P("Elle pèse 4,1 Go : à réserver aux postes de 16 Go. À essayer pour comparer, pas pour préparer un cours.")+'</p></div></details>');
+   quiz(b,[{k:"a1",q:"Dans ce fichier, quel mot-clé introduit les consignes permanentes de l'assistant ?",t:v=>v==="system",h:"Il est écrit en majuscules, juste avant les trois guillemets.",a:"SYSTEM",ok:"Spécialiser un assistant, ce n'est pas le réentraîner : c'est lui donner un rôle et des règles, dans un texte que chacun peut lire, corriger et partager avec ses collègues."}],done);
+ }},
+ {t:"Fabriquer « Prof SVT »",build(b,solved,done){
+   const w=add(b,'<div class="scene"><p>'+P("Réglez votre assistant. La recette se met à jour sous vos yeux : lisez-la avant de la télécharger.")+'</p></div><div class="grid2"><div class="fld"><label for="mfPub">Élèves visés</label>'+sel("mfPub",PUB,st.mf.pub)+'</div><div class="fld"><label for="mfLoc">Ancrage local</label>'+sel("mfLoc",LOC,st.mf.loc)+'</div><div class="fld"><label for="mfTon">Ton des réponses</label>'+sel("mfTon",TON,st.mf.ton)+'</div><div class="fld"><label>&nbsp;</label><label class="ck'+(st.mf.trame?" on":"")+'" style="padding:9px 12px"><input type="checkbox" id="mfTrame"'+(st.mf.trame?" checked":"")+'><span>Ajouter une trame de fiche de préparation</span></label></div></div>'+doc(modelfile(),"Modelfile_prof-svt.txt","mfPre")+'<div class="tools"><button class="btn" id="mfDl" type="button">Télécharger la recette</button><button class="btn ghost" type="button" id="mfCp" data-cp="">Copier la recette</button></div>');
+   const upd=()=>{w.querySelector("#mfPre").textContent=modelfile();w.querySelector("#mfCp").setAttribute("data-cp",modelfile());};upd();
+   [["mfPub","pub"],["mfLoc","loc"],["mfTon","ton"]].forEach(x=>w.querySelector("#"+x[0]).addEventListener("change",e=>{st.mf[x[1]]=e.target.value;save();upd();}));
+   w.querySelector("#mfTrame").addEventListener("change",e=>{st.mf.trame=e.target.checked;e.target.closest(".ck").classList.toggle("on",st.mf.trame);save();upd();});
+   w.querySelector("#mfDl").addEventListener("click",()=>dl("Modelfile_prof-svt.txt",modelfile()));
+   add(b,'<div class="scene"><p>'+P("Le fichier est dans votre dossier de téléchargements. Dans le terminal, placez-vous dans ce dossier, fabriquez l'assistant, puis vérifiez qu'il figure dans la liste :")+'</p></div>'+term([OS[st.os].dl,"ollama create prof-svt -f Modelfile_prof-svt.txt","ollama list"])+'<div class="scene"><p>'+P("Faites connaissance : lancez-le et demandez-lui « Qui es-tu et quelles sont tes règles ? ».")+'</p></div>'+term("ollama run prof-svt")+
+   '<details class="learn"><summary>La commande « create » échoue ? Deux pistes</summary><div class="c"><p>'+P("Le message parle de « pull model manifest » : le modèle de base n'est pas sur votre disque, reprenez la porte 1 de la salle 2. Le message parle d'un fichier introuvable : le terminal n'est pas dans le bon dossier, ou le fichier porte un autre nom, par exemple ‹Modelfile_prof-svt (1).txt›.")+'</p><p>'+P("Plan B sans fichier : ouvrez ‹ollama run "+M()+"›, tapez ‹/set system \"\"\"›, collez les consignes (bouton ci-dessous), fermez par ‹\"\"\"› puis Entrée. Enregistrez l'assistant avec ‹/save prof-svt›.")+'</p><div class="tools"><button class="btn ghost" type="button" id="sysCp" data-cp="">Copier les consignes seules</button></div></div></details>'+
+   '<div class="classbox"><div class="t">Skills publiées sur GitHub</div><p>'+P("La trame de fiche de préparation proposée ici s'inspire de la manière dont des « skills » pour enseignants, publiées sur GitHub, structurent une séance. Ces skills sont des fichiers texte : rien n'empêche d'en lire une, puis d'en recopier une consigne utile dans le bloc SYSTEM de votre recette. Le bonus vous y emmène.")+'</p></div>').querySelector("#sysCp").setAttribute("data-cp",sysText());
+   quiz(b,[{k:"a2",q:"Dans ‹ollama list›, quel nouveau nom apparaît ?",t:v=>v.indexOf("prof-svt")>=0||v.indexOf("prof svt")>=0,h:"C'est le nom que vous avez écrit juste après « ollama create ».",a:"prof-svt",ok:"Votre assistant existe. Il occupe très peu de place en plus : il réutilise le fichier du modèle et n'ajoute que vos consignes. Pour le modifier, corrigez la recette et relancez ‹ollama create›."}],done);
+ }}
+],
+/* ---------- SALLE 4 : LES DONNÉES ---------- */
+dat:[
+ {t:"Un jeu de données libre",build(b,solved,done){
+   const w=add(b,'<div class="scene"><p>'+P("Entre 2007 et 2009, la chercheuse Kristen Gorman et la station de recherche Palmer ont mesuré des manchots sur trois îles de l'archipel Palmer, en Antarctique : longueur et hauteur du bec, longueur de l'aileron, masse, sexe. Le fichier est un classique de l'enseignement des données.")+'</p></div><div class="tools"><button class="btn" id="csvDl" type="button">Télécharger le fichier pour le tableur (.csv)</button><button class="btn ghost" id="prevBtn" type="button">'+(st.prev?"Masquer":"Voir")+' les premières lignes</button><button class="btn ghost" id="anaBtn" type="button">Analyser le fichier</button></div><div id="prevBox"></div><div id="statBox"></div>');
+   const prev=()=>{w.querySelector("#prevBox").innerHTML=st.prev?'<div class="tscroll"><table class="dt"><tr>'+HEAD_FR.map(h=>"<th>"+h+"</th>").join("")+'</tr>'+ROWS.slice(0,8).map(x=>"<tr>"+frRow(x).map(c=>"<td>"+esc(c)+"</td>").join("")+"</tr>").join("")+'</table></div>':"";};
+   const stat=()=>{w.querySelector("#statBox").innerHTML=st.ana?'<div class="tscroll"><table class="dt"><tr><th>Espèce</th><th class="num">Effectif</th><th class="num">Bec : longueur (mm)</th><th class="num">Bec : hauteur (mm)</th><th class="num">Aileron (mm)</th><th class="num">Masse moyenne (g)</th></tr>'+STATS.map(s=>'<tr><td>Manchot '+SP[s.k]+'</td><td class="num">'+s.n+'</td><td class="num">'+f1(s.bl)+'</td><td class="num">'+f1(s.bd)+'</td><td class="num">'+f1(s.fl)+'</td><td class="num">'+f0(s.bm)+'</td></tr>').join("")+'</table></div><p class="src">'+P("Valeurs manquantes : "+NNOMES+" manchots sans mesures, "+NNOSEX+" de sexe inconnu. Moyennes calculées par cette page, à partir du fichier complet.")+'</p><p class="src">'+P("Données : K. Gorman et station Palmer (programme LTER) · paquet « palmerpenguins », Horst, Hill et Gorman (2020) · licence CC0, c'est-à-dire versées au domaine public. La version à télécharger ici a été traduite : noms de colonnes, espèces et sexes en français, virgule décimale.")+'</p>':"";};
+   prev();stat();
+   w.querySelector("#csvDl").addEventListener("click",()=>dl("manchots_palmer_fr.csv",frCsv(),"text/csv;charset=utf-8"));
+   w.querySelector("#prevBtn").addEventListener("click",e=>{st.prev=!st.prev;save();e.target.textContent=(st.prev?"Masquer":"Voir")+" les premières lignes";prev();});
+   w.querySelector("#anaBtn").addEventListener("click",()=>{st.ana=true;save();stat();});
+   quiz(b,[
+    {k:"n1",q:"Combien de manchots le fichier contient-il en tout ?",t:v=>v.replace(/\s/g,"")==="344",h:"Cliquez sur « Analyser le fichier », puis additionnez les trois effectifs.",a:"344",ok:"152 + 68 + 124 = 344 manchots. Gardez ce nombre en tête : si l'IA en annonce un autre, elle invente."},
+    {k:"n2",q:"Quelle espèce est la plus lourde en moyenne ?",t:v=>/papou|gentoo/.test(v),h:"Regardez la colonne « Masse moyenne ».",a:"le manchot papou",ok:"Le manchot papou : un peu plus de 5 kg en moyenne, contre 3,7 kg pour les deux autres espèces."},
+    {k:"n3",q:"Sous quelle licence ces données sont-elles publiées ?",t:v=>/cc\s*-?\s*0|cc zero|domaine public/.test(v),h:"Elle est indiquée sous le tableau d'analyse : deux lettres et un chiffre.",a:"CC0",ok:"CC0 : les auteurs renoncent à leurs droits, chacun peut réutiliser et modifier les données. Citer la source reste la règle en sciences."}],done);
+   add(b,'<details class="learn"><summary>Où trouver d\'autres jeux de données pour les sciences et les SVT ?</summary><div class="c"><table><tr><th>Source</th><th>Ce qu\'on y trouve</th></tr><tr><td>Vigie-Nature École (Muséum) · vigienature-ecole.fr</td><td>Les observations de biodiversité collectées par les classes, avec des activités d\'analyse.</td></tr><tr><td>GBIF · gbif.org</td><td>Des observations d\'espèces dans le monde entier, Guyane comprise. La licence est indiquée pour chaque jeu.</td></tr><tr><td>INPN (Muséum) · inpn.mnhn.fr</td><td>L\'inventaire national du patrimoine naturel : espèces et espaces de France, outre-mer inclus.</td></tr><tr><td>USGS · earthquake.usgs.gov/earthquakes/feed</td><td>Les séismes du monde, en fichiers pour tableur, mis à jour en continu.</td></tr><tr><td>data.gouv.fr</td><td>Les données publiques françaises : eau, air, climat, santé publique…</td></tr></table><p style="margin-top:10px">'+P("Trois questions avant de s'en servir : **qui a produit ces données ? sous quelle licence ? contiennent-elles des personnes ?**")+'</p></div></details>');
+ }},
+ {t:"La mémoire de travail de l'IA",build(b,solved,done){
+   const full=Math.round(frCsv().length/2),ext=Math.round(extractText().length/2),lim=4096,mx=Math.max(full,lim)*1.05;
+   add(b,'<div class="scene"><p>'+P("Un modèle ne lit pas un fichier comme le fait un tableur. Il ne dispose que d'une mémoire de travail limitée, comptée en tokens. Par défaut, sur un ordinateur ordinaire, Ollama lui en accorde 4 096.")+'</p></div><div class="gauge"><div class="row ko"><span>Le fichier complet (344 lignes)</span><div class="trk"><i data-w="'+(100*full/mx)+'"></i><span class="lim" style="left:'+(100*lim/mx)+'%"></span></div><span class="v">≈ '+full.toLocaleString("fr-FR")+' tokens</span></div><div class="row ok"><span>Un résumé et 12 lignes</span><div class="trk"><i data-w="'+(100*ext/mx)+'"></i><span class="lim" style="left:'+(100*lim/mx)+'%"></span></div><span class="v">≈ '+ext.toLocaleString("fr-FR")+' tokens</span></div><div class="legendline">▏ trait jaune : limite par défaut, 4 096 tokens · estimation : environ un token pour deux caractères dans un tableau de nombres</div></div>');
+   setTimeout(()=>b.querySelectorAll(".gauge i").forEach(i=>i.style.width=Math.min(100,parseFloat(i.dataset.w))+"%"),60);
+   quiz(b,[{k:"n4",q:"Le fichier complet tient-il dans la mémoire de travail par défaut ? (oui ou non)",t:v=>/^non/.test(v),h:"Comparez la barre rouge et le trait jaune.",a:"non",ok:"Non. Et si on le colle quand même, une partie du texte est écartée sans avertissement : l'IA répond à partir de ce qui reste, avec le même aplomb. On lui donne donc la description des colonnes, un résumé et quelques lignes."}],done);
+   add(b,'<details class="learn"'+(solved?" open":"")+'><summary>Voir ce que l\'IA recevra : résumé et extrait</summary><div class="c">'+doc(extractText(),"extrait préparé par la page")+'</div></details>');
+ }}
+],
+/* ---------- SALLE 5 : L'ACTIVITÉ ---------- */
+act:[
+ {t:"Composer la demande",build(b,solved,done){
+   const w=add(b,'<div class="scene"><p>'+P("Une bonne demande dit pour qui, combien de temps, sur quelle notion, avec quelles données et sous quelle forme. Réglez les quatre champs : le texte se compose tout seul, données comprises.")+'</p></div><div class="grid2"><div class="fld"><label for="prNiv">Niveau</label>'+sel("prNiv",NIV,st.pr.niv)+'</div><div class="fld"><label for="prDur">Durée</label>'+sel("prDur",DUR,st.pr.dur)+'</div><div class="fld full"><label for="prNot">Notion travaillée</label>'+sel("prNot",NOT,st.pr.not)+'</div><div class="fld full"><label for="prModa">Organisation</label>'+sel("prModa",MODA,st.pr.moda)+'</div></div>'+doc(promptText(),"ma demande","prPre"));
+   const upd=()=>{w.querySelector("#prPre").textContent=promptText();};
+   [["prNiv","niv"],["prDur","dur"],["prNot","not"],["prModa","moda"]].forEach(x=>w.querySelector("#"+x[0]).addEventListener("change",e=>{st.pr[x[1]]=e.target.value;save();upd();}));
+   if(solved){add(b,'<div class="lesson"><b>✓</b> '+P("Demande prête. Vous pouvez encore changer les réglages : la porte suivante reprend toujours la dernière version.")+'</div>');return;}
+   add(b,'<div class="tools"><button class="btn" id="prGo" type="button">Ma demande est prête →</button></div>').querySelector("#prGo").addEventListener("click",done);
+ }},
+ {t:"Produire, puis relire",build(b,solved,done){
+   const pr=promptText();
+   const panes={
+    term:'<ol class="steps"><li>'+P("Copiez votre demande avec le bouton ci-dessous. Elle est entourée de trois guillemets : le terminal l'accepte ainsi en un seul bloc.")+'</li><li>'+P("Ouvrez la conversation avec votre assistant :")+'</li></ol>'+term("ollama run prof-svt")+'<ol class="steps" start="3"><li>'+P("Collez (Ctrl + V ou clic droit), puis Entrée."+(st.os==="win"?" Si Windows affiche un avertissement de collage sur plusieurs lignes, confirmez.":"")+" Laissez écrire : sans carte graphique, comptez une à quatre minutes.")+'</li><li>'+P("Sélectionnez la réponse à la souris, copiez-la et collez-la dans le cadre ci-dessous.")+'</li></ol><div class="tools"><button class="btn ghost" type="button" data-cp="'+esc('"""'+pr+'"""')+'">Copier la demande (pour le terminal)</button></div>',
+    app:'<ol class="steps"><li>'+P("Ouvrez l'application Ollama. Dans la liste des modèles, choisissez ‹prof-svt›. S'il n'y figure pas, passez par le terminal.")+'</li><li>'+P("Copiez votre demande avec le bouton ci-dessous, collez-la dans la zone de saisie, envoyez.")+'</li><li>'+P("Copiez la réponse et collez-la dans le cadre ci-dessous.")+'</li></ol><div class="tools"><button class="btn ghost" type="button" data-cp="'+esc(pr)+'">Copier la demande</button></div>',
+    page:'<p class="assist" style="margin-top:0">'+P("Cette console envoie votre demande à un moteur Ollama et écrit la réponse dans le cadre ci-dessous. Elle sert surtout de plan B : tapez l'adresse donnée par l'animateur pour utiliser son ordinateur. Sur votre propre moteur, le navigateur est refusé par défaut : c'est une protection, ne la retirez pas.")+'</p><div class="grid2"><div class="fld"><label for="cUrl">Adresse du moteur</label><input class="code" id="cUrl" value="'+esc(st.url)+'" spellcheck="false" autocomplete="off"></div><div class="fld"><label for="cModel">Modèle</label><select class="code" id="cModel"><option value="">— testez d\'abord la connexion —</option></select></div></div><div class="tools"><button class="btn ghost" id="cTest" type="button">Tester la connexion</button><button class="btn" id="cGo" type="button">Envoyer ma demande</button><button class="btn ghost" id="cStop" type="button" hidden>Arrêter</button></div><div class="fb" id="cFb" aria-live="polite"></div>'};
+   const w=add(b,'<div class="tabs" role="tablist">'+[["term","Dans le terminal"],["app","Dans l'application"],["page","Depuis cette page"]].map(x=>'<button type="button" role="tab" data-way="'+x[0]+'" aria-selected="'+(st.way===x[0])+'">'+x[1]+'</button>').join("")+'</div><div class="tabpane">'+panes[st.way]+'</div><div class="ask">'+P("La réponse de l'IA : collez-la ici, puis corrigez-la directement")+'</div><textarea class="code" id="outTa" style="min-height:230px" placeholder="Collez ici la réponse de l\'IA…" spellcheck="false"></textarea><div class="tools"><button class="btn" id="anaGo" type="button">Analyser la réponse</button><button class="btn ghost" id="smpBtn" type="button">Pas d\'IA sous la main ? Charger un exemple à corriger</button><button class="btn ghost" id="prtBtn" type="button">Imprimer la fiche</button><button class="btn ghost" id="mdBtn" type="button">Enregistrer le texte</button></div><ul class="chk" id="anaBox"></ul>');
+   const ta=w.querySelector("#outTa");ta.value=st.out;ta.addEventListener("input",()=>{st.out=ta.value;save();});
+   w.querySelectorAll("[data-way]").forEach(t=>t.addEventListener("click",()=>{st.way=t.dataset.way;save();render();}));
+   const runAna=()=>{const box=w.querySelector("#anaBox");if(st.out.trim().length<40){box.innerHTML='<li class="ko"><b>✗ Rien à analyser.</b> Collez d\'abord la réponse de l\'IA.</li>';return;}box.innerHTML=analyse(st.out).map(r=>'<li class="'+(r.ok?"ok":"ko")+'"><b>'+(r.ok?"✓ ":"⚠ ")+esc(r.t)+'.</b> '+sup(r.d)+'</li>').join("");};
+   w.querySelector("#anaGo").addEventListener("click",runAna);
+   w.querySelector("#smpBtn").addEventListener("click",()=>{ta.value=SAMPLE;st.out=SAMPLE;save();runAna();});
+   w.querySelector("#prtBtn").addEventListener("click",()=>{buildPrint();window.print();});
+   w.querySelector("#mdBtn").addEventListener("click",()=>dl("activite_svt_manchots.md",st.out||""));
+   if(st.way==="page"){
+     const fb=w.querySelector("#cFb"),ms=w.querySelector("#cModel"),say=(c,t)=>{fb.className="fb "+c;fb.innerHTML=t;};
+     w.querySelector("#cUrl").addEventListener("change",e=>{st.url=e.target.value.trim();save();});
+     const fill=names=>{ms.innerHTML=names.map(n=>'<option'+(n===st.cm?" selected":"")+'>'+esc(n)+'</option>').join("");if(!st.cm||names.indexOf(st.cm)<0){st.cm=names.find(n=>/^prof-svt/.test(n))||names.find(n=>/^gemma3/.test(n))||names[0];ms.value=st.cm;save();}};
+     ms.addEventListener("change",()=>{st.cm=ms.value;save();});
+     const test=async()=>{st.url=w.querySelector("#cUrl").value.trim();save();say("hintline","Connexion en cours…");try{const names=await apiTags();if(!names.length){say("no","✗ Le moteur répond, mais il ne contient aucun modèle.");return false;}fill(names);say("ok","✓ Moteur joignable : "+names.length+" modèle"+(names.length>1?"s":"")+" disponible"+(names.length>1?"s":"")+".");return true;}catch(e){say("no","✗ Connexion impossible. Trois causes possibles : le moteur n'est pas lancé ; l'adresse est fausse ; le moteur refuse les pages web (réglage par défaut). Utilisez le terminal, ou l'adresse de l'animateur.");return false;}};
+     w.querySelector("#cTest").addEventListener("click",test);
+     w.querySelector("#cGo").addEventListener("click",async()=>{if(!ms.value&&!(await test()))return;const model=ms.value,go=w.querySelector("#cGo"),stop=w.querySelector("#cStop");
+       go.hidden=true;stop.hidden=false;ta.value="";st.out="";say("hintline",'<span class="live"></span>'+esc(model)+" écrit… Si d'autres binômes utilisent le même moteur, votre demande attend son tour.");const t0=Date.now();
+       try{const last=await apiChat(model,/^prof-svt/.test(model)?"":sysText(),promptText(),parseFloat(st.mf.ton),tok=>{ta.value+=tok;ta.scrollTop=ta.scrollHeight;});st.out=ta.value;save();
+         const sp=(last&&last.eval_count&&last.eval_duration)?(last.eval_count/(last.eval_duration/1e9)):0;say("ok","✓ Réponse reçue en "+Math.round((Date.now()-t0)/1000)+" s"+(sp?" · vitesse : "+sp.toFixed(1).replace(".",",")+" tokens par seconde":"")+". Passez à la relecture.");runAna();}
+       catch(e){st.out=ta.value;save();say("no",e.name==="AbortError"?"■ Arrêté. Le texte déjà écrit est conservé.":"✗ Échec : "+esc(e.message||"erreur inconnue")+".");}
+       go.hidden=false;stop.hidden=true;});
+     w.querySelector("#cStop").addEventListener("click",()=>{if(ctl)ctl.abort();});
+   }
+   const c=add(b,'<div class="ask">'+P("Relecture : je coche ce que j'ai réellement vérifié")+'</div><div class="checks">'+CK.map((t,i)=>'<label class="ck'+(st.ck[i]?" on":"")+'"><input type="checkbox" data-ck="'+i+'"'+(st.ck[i]?" checked":"")+'><span>'+sup(t)+'</span></label>').join("")+'</div>'+(solved?'<div class="lesson"><b>✓</b> '+P("Relecture validée. Imprimez la fiche ou enregistrez le texte : il vous appartient.")+'</div>':'<div class="tools"><button class="btn" id="ckGo" type="button">Valider la relecture →</button></div><div class="fb" id="ckFb"></div>'));
+   c.querySelectorAll("[data-ck]").forEach(x=>x.addEventListener("change",e=>{st.ck[+x.dataset.ck]=e.target.checked;x.closest(".ck").classList.toggle("on",e.target.checked);save();}));
+   if(!solved)c.querySelector("#ckGo").addEventListener("click",()=>{const f=c.querySelector("#ckFb");if(st.out.trim().length<200){f.className="fb no";f.textContent="✗ Il manque la réponse de l'IA : produisez-la, ou chargez l'exemple à corriger.";return;}if(!st.ck.every(Boolean)){f.className="fb no";f.textContent="✗ Les six points doivent être vérifiés, pas seulement cochés.";return;}done();});
+   if(st.out.trim().length>=40)runAna();
+ }}
+],
+/* ---------- BONUS : CLAUDE CODE ET LES SKILLS ---------- */
+bon:[
+ {t:"Qui voit quoi ?",build(b,solved,done){
+   add(b,'<div class="scene"><p>'+P("Claude Code s'installe en une commande, sans droits d'administrateur. Mais installer l'outil chez soi ne dit pas où le modèle calcule. Trois montages, trois réponses :")+'</p></div><div class="tscroll" style="border:none;background:none"><table class="cmp"><thead><tr><th></th><th>Ollama seul</th><th>Claude Code + compte Claude</th><th>Claude Code piloté par Ollama</th></tr></thead><tbody><tr><th>LE MODÈLE CALCULE</th><td class="g">sur votre ordinateur</td><td class="r">sur les serveurs d\'Anthropic</td><td class="g">sur votre ordinateur</td></tr><tr><th>COÛT</th><td>gratuit</td><td>abonnement Pro, Max, Team ou Enterprise, ou compte Console ; l\'offre gratuite ne suffit pas</td><td>gratuit</td></tr><tr><th>MACHINE</th><td>un portable de 8 Go suffit</td><td>un portable ordinaire, connecté à Internet</td><td class="o">une machine puissante : l\'agent demande une mémoire de travail d\'au moins 64 000 tokens</td></tr><tr><th>DONNÉES D\'ÉLÈVES</th><td class="o">rien ne part sur Internet, mais le RGPD et la sécurité du poste s\'appliquent</td><td class="r">jamais : règle du feu tricolore, données publiables seulement</td><td class="o">comme Ollama seul</td></tr></tbody></table></div>'+
+   '<div class="scene"><p>'+P("Installer Claude Code :")+'</p></div>'+term(st.os==="win"?"irm https://claude.ai/install.ps1 | iex":"curl -fsSL https://claude.ai/install.sh | bash")+term(["claude --version","claude doctor"])+'<div class="scene"><p>'+P("Le brancher sur un modèle local. Ollama propose d'installer Claude Code s'il est absent, puis le lance sur le modèle choisi :")+'</p></div>'+term("ollama launch claude"));
+   quiz(b,[{k:"b1",q:"Avec un compte Claude, où le modèle calcule-t-il : sur votre ordinateur ou dans le cloud ?",t:v=>/cloud|nuage|serveur|internet|anthropic|en ligne|distant/.test(v),h:"Relisez la première ligne du tableau, colonne du milieu.",a:"dans le cloud",ok:"L'outil est chez vous, le « cerveau » est ailleurs : tout ce que l'agent lit pour travailler peut être envoyé au modèle. On n'y met que des données publiables."}],done);
+ }},
+ {t:"Une skill se lit avant de s'installer",build(b,solved,done){
+   add(b,'<div class="scene"><p>'+P("Une skill est un dossier. Au centre, un fichier texte, ‹SKILL.md›, qui explique à l'agent comment mener une tâche. Autour, parfois, des scripts et des connexions vers des services en ligne. Exemple : le dépôt officiel ‹anthropics/k12-teacher-skills›, sous licence Apache 2.0.")+'</p></div><div class="tscroll"><table class="dt" style="white-space:normal"><tr><th>Ce que contient le plugin (inventaire du 18/11/2026)</th><th class="num">Nombre</th></tr><tr><td>Skills (un fichier SKILL.md chacune) : création de séance, différenciation, préparation, vérification de la compréhension en mathématiques</td><td class="num">4</td></tr><tr><td>Scripts Python</td><td class="num">8</td></tr><tr><td>Scripts shell</td><td class="num">2</td></tr><tr><td>Connecteurs vers des services tiers, déclarés dans le fichier .mcp.json et activables par l\'utilisateur (Canva, MagicSchool, Diffit…)</td><td class="num">9</td></tr></table></div><div class="scene"><p>'+P("Pour les sciences, ces skills s'appuient sur les référentiels américains (NGSS) : il faut leur demander explicitement de suivre les programmes français. Installation, après lecture :")+'</p></div>'+term(["git clone https://github.com/anthropics/k12-teacher-skills","claude plugin marketplace add ./k12-teacher-skills","claude plugin install k12-education@k12-teacher-skills"])+
+   '<details class="learn"><summary>Deux autres bibliothèques · Se servir d\'une skill sans Claude Code</summary><div class="c"><table><tr><th>Dépôt GitHub</th><th>Contenu</th><th>Licence</th></tr><tr><td>GarethManning/education-agent-skills</td><td>165 skills pédagogiques, dont une séquence d\'enquête ancrée dans un écosystème local</td><td>CC BY-SA 4.0</td></tr><tr><td>Jellypod-Inc/school-skills</td><td>7 skills : séance, tutorat socratique, grille d\'évaluation, carte mentale…</td><td>MIT</td></tr></table><p style="margin-top:10px">'+P("Toutes sont rédigées en anglais et construites sur des référentiels anglo-saxons. Sans Claude Code, elles restent utiles : ouvrez un ‹SKILL.md› sur GitHub, lisez-le, et recopiez les consignes qui vous conviennent dans le bloc SYSTEM de votre recette Ollama.")+'</p></div></details>'+secu("Avant d'installer une skill : **qui la publie ? sous quelle licence ? contient-elle des scripts ? vers quels services se connecte-t-elle ?** Une skill donne des instructions à un agent qui agit sur vos fichiers."));
+   quiz(b,[{k:"b2",q:"Quel fichier faut-il ouvrir et lire avant d'installer une skill ?",t:v=>/skill\.? ?md/.test(v),h:"Il porte le même nom dans toutes les skills, en majuscules, avec l'extension .md.",a:"SKILL.md",ok:"‹SKILL.md› dit ce que l'agent fera. Lisez aussi la liste des fichiers qui l'accompagnent."},{k:"b3",q:"D'après l'inventaire, combien de services tiers ce plugin peut-il connecter ?",t:v=>v==="9"||v==="neuf",h:"Dernière ligne du tableau.",a:"9",ok:"Neuf connecteurs, que l'utilisateur choisit d'activer ou non. Chacun est une porte vers un service en ligne : à ouvrir en connaissance de cause."}],done);
+ }},
+ {t:"Écrire sa propre skill",build(b,solved,done){
+   add(b,'<div class="scene"><p>'+P("Vos règles de la salle 3 font une skill en changeant seulement l'en-tête. Voici la vôtre, construite à partir de vos réglages :")+'</p></div>'+doc(skillmd(),"SKILL.md")+'<div class="tools"><button class="btn" id="skDl" type="button">Télécharger SKILL.md</button></div><div class="scene"><p>'+P("Rangez-la dans le dossier des skills personnelles de Claude Code :")+'</p></div>'+term(st.os==="win"?["mkdir $HOME\\.claude\\skills\\activite-svt","move $HOME\\Downloads\\SKILL.md $HOME\\.claude\\skills\\activite-svt\\"]:["mkdir -p ~/.claude/skills/activite-svt","mv ~/Downloads/SKILL.md ~/.claude/skills/activite-svt/"])+'<div class="scene"><p>'+P("Dans une skill, le champ ‹name› devient une commande à taper dans Claude Code, précédée d'une barre oblique. Le champ ‹description› aide l'agent à décider seul quand s'en servir.")+'</p></div>').querySelector("#skDl").addEventListener("click",()=>dl("SKILL.md",skillmd()));
+   quiz(b,[{k:"b4",q:"Dans Claude Code, quelle commande appelle votre skill ?",t:v=>v.replace(/\s/g,"").indexOf("/activite-svt")>=0,h:"Une barre oblique, puis la valeur du champ « name ».",a:"/activite-svt",ok:"Modelfile pour Ollama, SKILL.md pour un agent : deux formats, une même idée. Votre savoir-faire d'enseignant, écrit noir sur blanc, que l'IA applique et que vos collègues peuvent relire."}],done);
+ }}
+]
+};
+
+/* ============ ACCUEIL : antisèche et bloc animateur ============ */
+function renderStatic(){
+  el("cheat").innerHTML='<table><tr><th>Commande</th><th>Effet</th></tr>'+[["ollama --version","afficher la version installée"],["ollama pull "+M(),"télécharger un modèle"],["ollama list","lister les modèles présents sur le disque"],["ollama run prof-svt","ouvrir une conversation"],["/bye","quitter la conversation"],["/clear","repartir d'une conversation vide"],["ollama ps","voir les modèles chargés en mémoire, et sur quel processeur"],["ollama show prof-svt","afficher la fiche d'un modèle : taille, licence, consignes"],["ollama create prof-svt -f Modelfile_prof-svt.txt","fabriquer un assistant à partir d'une recette"],["ollama rm prof-svt","supprimer un modèle"]].map(r=>'<tr><td><code class="i">'+esc(r[0])+'</code></td><td>'+sup(r[1])+'</td></tr>').join("")+'</table><p style="margin-top:10px">'+P({win:"Tout retirer après le TP : Paramètres → Applications → Ollama → Désinstaller, puis supprimez le dossier ‹%USERPROFILE%\\.ollama› s'il existe encore (il contient les modèles).",mac:"Tout retirer après le TP : glissez Ollama des Applications vers la corbeille, puis supprimez le dossier ‹~/.ollama› (il contient les modèles).",lin:"Tout retirer après le TP : supprimez chaque modèle avec ‹ollama rm›, puis suivez la page « Linux » de la documentation d'Ollama pour désinstaller le service."}[st.os])+'</p>';
+  el("anim").innerHTML='<p><b>Kit hors-ligne, sur clé USB.</b> '+P("Les installateurs (‹OllamaSetup.exe›, ‹ollama.dmg›) depuis ollama.com/download ; cette page ; et le dossier ‹models› de votre propre poste après ‹ollama pull gemma3:4b› et ‹ollama pull gemma3:1b› (Windows : ‹C:\\Users\\vous\\.ollama\\models› · macOS : ‹~/.ollama/models›). Les participants le copient au même endroit chez eux. Essayez la copie sur un second poste avant la séance.")+'</p><p><b>Plan B : prêter son moteur à la salle.</b> '+P("Les postes où l'installation échoue utilisent la console de la salle 5, onglet « Depuis cette page », avec votre adresse. Quittez d'abord Ollama (icône près de l'horloge), puis lancez-le ainsi :")+'</p>'+term('$env:OLLAMA_HOST="0.0.0.0:11434"; $env:OLLAMA_ORIGINS="*"; $env:OLLAMA_NUM_PARALLEL="2"; ollama serve',"PowerShell (Windows)")+term('OLLAMA_HOST=0.0.0.0:11434 OLLAMA_ORIGINS="*" OLLAMA_NUM_PARALLEL=2 ollama serve',"Terminal (macOS, Linux)")+'<p>'+P("Votre adresse sur le réseau : ‹ipconfig› (Windows), ‹ipconfig getifaddr en0› (macOS), ‹hostname -I› (Linux). Les participants saisissent ‹http://VOTRE_ADRESSE:11434›. Sous Windows, autorisez l'accès quand le pare-feu le demande. Les demandes sont traitées deux par deux : les autres attendent leur tour.")+'</p><div class="classbox"><div class="t">Réflexe sécurité</div><p>'+P("Ce réglage ouvre votre moteur, **sans mot de passe**, à tout le réseau et à toute page web ouverte sur les postes. À réserver à un réseau que vous maîtrisez (partage de connexion), le temps de la séance. Les variables ne valent que pour cette fenêtre : fermez-la, tout redevient comme avant.")+'</p></div>';
+}
+
+/* ============ DÉMARRAGE ============ */
+el("playBack").addEventListener("click",()=>{renderHub();show("home");});
+el("modback").addEventListener("click",()=>{renderHub();show("home");});
+el("projBtn").addEventListener("click",e=>{const on=document.body.classList.toggle("proj");e.currentTarget.setAttribute("aria-pressed",on);});
+el("wipeBtn").addEventListener("click",()=>{if(!confirm("Effacer la progression enregistrée sur cet appareil ?"))return;try{localStorage.removeItem(KEY);}catch(e){}st=fresh();paintPoste();renderStatic();renderHub();buildPrint();});
+paintPoste();renderStatic();renderHub();buildPrint();
+</script>
+</body>
+</html>
