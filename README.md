@@ -340,7 +340,7 @@ root.mainloop()
 
 Enregistrer le fichier.
 
-Étape 4 - Exécuter le programme
+# Étape 4 - Exécuter le programme
 
 Dans le dossier contenant matrix_v4.py, exécuter :
 
