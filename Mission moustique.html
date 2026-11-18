@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mission moustique</title>
+<style>
+:root{
+  /* Mise en page : une colonne d'enquête, le numéro d'étape dans la marge, les étoiles gagnées collées en haut. */
+  --paper:#f1f5ec;
+  --card:#ffffff;
+  --ink:#15301f;
+  --ink-soft:#48604f;
+  --water:#1a6f82;
+  --water-soft:#d3ebef;
+  --alert:#bf3a1a;
+  --sun:#f5c62f;
+  --good:#23774a;
+  --line:#c3cfc0;
+  --font-display:"Arial Rounded MT Bold","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  --font-body:system-ui,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --font-mono:ui-monospace,Consolas,"Courier New",monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-body);font-size:1.0625rem;line-height:1.55}
+.wrap{max-width:900px;margin:0 auto;padding:0 20px}
+h1,h2,h3{font-family:var(--font-display);text-wrap:balance;margin:0}
+p{margin:0 0 12px}
+a{color:var(--water)}
+
+/* Barre des étoiles */
+.topbar{position:sticky;top:0;z-index:5;background:var(--ink);color:#fff}
+.topbar-in{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;padding-top:8px;padding-bottom:8px;font-family:var(--font-mono);font-size:.875rem}
+.stars{display:flex;gap:4px}
+.star{width:22px;height:22px;fill:none;stroke:var(--sun);stroke-width:1.6;stroke-linejoin:round}
+.star.on{fill:var(--sun)}
+
+/* En-tête */
+.hero{padding-top:44px;padding-bottom:28px}
+.eyebrow{font-family:var(--font-mono);font-size:.8125rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:10px}
+h1{font-size:clamp(2.8rem,9vw,5.4rem);line-height:.94;letter-spacing:-.02em;margin-bottom:20px}
+.wave{color:var(--alert);text-decoration:underline wavy var(--water);text-decoration-thickness:4px;text-underline-offset:10px}
+.lead{font-size:1.3rem;line-height:1.4;max-width:34em;margin-bottom:14px}
+.hero p{max-width:40em}
+
+/* Étapes */
+.step{display:grid;grid-template-columns:64px minmax(0,1fr);gap:8px 20px;padding:32px 0;border-top:3px solid var(--ink)}
+.step-num{font-family:var(--font-display);font-size:3rem;line-height:1;color:var(--water)}
+.step h2{font-size:1.6rem;line-height:1.15;margin-bottom:10px}
+.step h3{font-size:1.2rem;margin-bottom:6px}
+.step-body>p{max-width:40em}
+.card{background:var(--card);border:2px solid var(--ink);border-radius:14px;padding:16px}
+.scroll{overflow-x:auto}
+.scroll svg{display:block;width:100%;min-width:560px;height:auto}
+.row{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+
+.btn{font:inherit;font-weight:700;padding:10px 18px;border-radius:999px;border:2px solid var(--ink);background:var(--card);color:var(--ink);cursor:pointer}
+.btn:hover{background:var(--water-soft)}
+.btn-primary{background:var(--water);border-color:var(--water);color:#fff}
+.btn-primary:hover{background:var(--ink);border-color:var(--ink)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn:focus-visible,input:focus-visible,select:focus-visible,.spot:focus-visible{outline:4px solid var(--sun);outline-offset:2px}
+
+.fb{margin-top:14px;padding:10px 14px;border-left:8px solid var(--line);background:var(--card);border-radius:0 10px 10px 0;min-height:2.9em}
+.fb:empty{min-height:0;margin:0;padding:0;border:0;background:none}
+.fb.ok{border-left-color:var(--good)}
+.fb.no{border-left-color:var(--alert)}
+.fact{margin-top:14px;font-size:1.15rem}
+.fact strong{background:var(--sun);padding:0 6px;border-radius:6px}
+
+/* Étape 1 : le cycle */
+.s-ink{stroke:var(--ink)}
+.f-ink{fill:var(--ink)}
+.lab{font-family:var(--font-display);font-size:17px;fill:var(--ink);text-anchor:middle}
+.num{font-family:var(--font-display);font-size:15px;fill:#fff;text-anchor:middle}
+.stage .draw{opacity:.38;transition:opacity .3s}
+.stage.is-on .draw{opacity:1}
+.halo{fill:var(--sun);opacity:0;transition:opacity .3s}
+.stage.is-on .halo{opacity:.6}
+.fly,.wig{transform-box:fill-box;transform-origin:center}
+.stage.is-on .fly{animation:vol 1.1s ease-in-out infinite}
+.stage.is-on .wig{animation:tortille 1.3s ease-in-out infinite}
+@keyframes vol{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes tortille{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(5deg)}}
+.caption{margin-top:12px}
+.jour{font-family:var(--font-mono);font-size:.875rem;color:var(--water);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+#cycle-texte{min-height:3.2em}
+
+/* Étape 2 : l'ordre */
+.slots{list-style:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:0;margin:14px 0 0}
+.slots li{border:2px dashed var(--ink-soft);border-radius:12px;padding:10px 8px;text-align:center;min-height:3.4em;font-weight:700;background:var(--card)}
+.slots li span{display:block;font-family:var(--font-mono);font-size:.75rem;font-weight:400;color:var(--ink-soft)}
+.slots li.full{border-style:solid;border-color:var(--ink);background:var(--water-soft)}
+
+/* Étape 3 : vrai ou faux */
+.vf{display:grid;gap:12px;margin-top:14px}
+.vf-item{background:var(--card);border:2px solid var(--ink);border-radius:14px;padding:14px 16px}
+.vf-item p{margin:0;font-weight:700}
+.vf-item .fb{min-height:0;margin-top:10px}
+.vf-item .fb:empty{margin:0}
+
+/* Étape 4 : la cour */
+.spot{cursor:pointer}
+.spot .ring{fill:transparent;stroke:var(--ink-soft);stroke-width:2;stroke-dasharray:5 6}
+.spot:hover .ring{stroke:var(--water);stroke-width:4}
+.spot.found .ring{stroke:var(--alert);stroke-width:5;stroke-dasharray:none}
+.spot.safe .ring{stroke:var(--good);stroke-width:5;stroke-dasharray:none}
+.count{font-family:var(--font-mono);margin-top:10px}
+
+/* Étape 5 : la semaine */
+.days{display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:4px;margin:14px 0 6px}
+.day{border-radius:8px;padding:8px 0;text-align:center;font-family:var(--font-mono);font-size:.875rem;font-weight:700;border:3px solid transparent}
+.day.eau{background:var(--water-soft)}
+.day.limite{background:var(--sun)}
+.day.risque{background:#f3b79f}
+.day.envol{background:var(--alert);color:#fff}
+.day.pick{border-color:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.9375rem;margin:0 0 12px;padding:0;list-style:none}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:4px;margin-right:6px;vertical-align:-2px}
+.slider{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin-top:6px}
+.slider input{flex:1 1 240px;accent-color:var(--water)}
+.slider output{font-weight:700}
+
+/* Étape 6 : la fiche d'enquête */
+.fiche{width:100%;border-collapse:collapse;min-width:620px}
+.fiche th,.fiche td{border:2px solid var(--ink);padding:6px;text-align:left}
+.fiche th{background:var(--water-soft);font-family:var(--font-display);font-size:.9375rem;white-space:nowrap}
+.fiche input,.fiche select{width:100%;font:inherit;padding:6px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink)}
+.fiche tr.extra{display:none}
+.safety{border-left:8px solid var(--alert);padding:8px 14px;background:var(--card);border-radius:0 10px 10px 0;margin:12px 0}
+
+/* Étape 7 : le quiz */
+.quiz{display:grid;gap:14px;margin-top:14px}
+.quiz fieldset{border:2px solid var(--ink);border-radius:14px;padding:12px 16px;background:var(--card);margin:0;min-width:0}
+.quiz legend{font-weight:700;padding:0 6px}
+.quiz label{display:block;padding:5px 0;cursor:pointer}
+.quiz input{margin-right:8px;accent-color:var(--water)}
+.quiz .fb{min-height:0}
+.quiz .fb:empty{margin:0}
+
+/* Bilan et enseignant */
+.bilan ul{padding-left:1.2em;margin:0 0 12px}
+.teacher{border-top:3px solid var(--ink);padding:28px 0 56px;font-size:.9688rem}
+.teacher h2{font-size:1.3rem;margin-bottom:10px}
+.teacher dl{display:grid;grid-template-columns:150px minmax(0,1fr);gap:6px 16px;margin:0}
+.teacher dt{font-family:var(--font-mono);font-size:.8125rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);padding-top:3px}
+.teacher dd{margin:0}
+
+@media (max-width:600px){
+  .step{grid-template-columns:minmax(0,1fr)}
+  .step-num{font-size:2.2rem}
+  .slots{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .days{grid-template-columns:repeat(7,minmax(0,1fr))}
+  .teacher dl{grid-template-columns:minmax(0,1fr)}
+}
+@media (prefers-reduced-motion:reduce){
+  .stage .draw,.halo{transition:none}
+  .stage.is-on .fly,.stage.is-on .wig{animation:none}
+}
+@media print{
+  .topbar,.step:not(#enquete),.bilan,.teacher,.btn,.hero .lead,.hero p,.step-num,#print-note{display:none !important}
+  body{background:#fff}
+  .hero{padding:0 0 8px}
+  h1{font-size:2rem}
+  .step{display:block;border-top:0;padding:0}
+  .wrap{max-width:none;padding:0}
+  .scroll{overflow:visible}
+  .fiche{min-width:0}
+  .fiche td{height:3em}
+  .fiche tr.extra{display:table-row}
+  .fiche input,.fiche select{border:0;background:none;appearance:none;-webkit-appearance:none}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap topbar-in">
+    <span>Mission moustique</span>
+    <span class="stars" aria-hidden="true">
+      <svg class="star" data-star="ordre" viewBox="0 0 24 24"><path d="M12 2.5l2.9 6.1 6.6.9-4.8 4.6 1.2 6.6L12 17.6l-5.9 3.1 1.2-6.6L2.5 9.5l6.6-.9z"/></svg>
+      <svg class="star" data-star="vraifaux" viewBox="0 0 24 24"><path d="M12 2.5l2.9 6.1 6.6.9-4.8 4.6 1.2 6.6L12 17.6l-5.9 3.1 1.2-6.6L2.5 9.5l6.6-.9z"/></svg>
+      <svg class="star" data-star="gites" viewBox="0 0 24 24"><path d="M12 2.5l2.9 6.1 6.6.9-4.8 4.6 1.2 6.6L12 17.6l-5.9 3.1 1.2-6.6L2.5 9.5l6.6-.9z"/></svg>
+      <svg class="star" data-star="semaine" viewBox="0 0 24 24"><path d="M12 2.5l2.9 6.1 6.6.9-4.8 4.6 1.2 6.6L12 17.6l-5.9 3.1 1.2-6.6L2.5 9.5l6.6-.9z"/></svg>
+      <svg class="star" data-star="quiz" viewBox="0 0 24 24"><path d="M12 2.5l2.9 6.1 6.6.9-4.8 4.6 1.2 6.6L12 17.6l-5.9 3.1 1.2-6.6L2.5 9.5l6.6-.9z"/></svg>
+    </span>
+    <span aria-live="polite">Étoiles gagnées : <span class="js-star-count">0</span> sur 5</span>
+  </div>
+</div>
+
+<header class="hero wrap">
+  <p class="eyebrow">Sciences · cycle 3 · 45 minutes</p>
+  <h1>Mission <span class="wave">moustique</span></h1>
+  <p class="lead">Un moustique peut naître dans un simple seau d'eau. Ta mission : comprendre comment il grandit, puis l'en empêcher.</p>
+  <p>Le moustique <em>Aedes aegypti</em> vit près des maisons et pique surtout le jour. En piquant, la femelle peut transmettre des virus, comme ceux de la dengue et du chikungunya.</p>
+</header>
+
+<main class="wrap">
+
+<!-- ÉTAPE 1 -->
+<section class="step" id="cycle" aria-labelledby="t-cycle">
+  <div class="step-num" aria-hidden="true">1</div>
+  <div class="step-body">
+    <h2 id="t-cycle">Observe la vie du moustique dans un seau</h2>
+    <p>Le moustique passe par quatre stades. Fais-les défiler, ou lance l'animation.</p>
+    <div class="card">
+      <div class="scroll">
+        <svg id="cycle-svg" viewBox="0 0 720 380" role="img" aria-labelledby="cycle-svg-t cycle-svg-d">
+          <title id="cycle-svg-t">Le cycle de vie du moustique dans un seau d'eau</title>
+          <desc id="cycle-svg-d">Un seau rempli d'eau vu en coupe. Des œufs sont collés sur la paroi au-dessus de l'eau. Une larve et une nymphe vivent dans l'eau. Un moustique adulte vole au-dessus du seau.</desc>
+          <defs>
+            <marker id="fl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#1a6f82"/></marker>
+            <clipPath id="clip-loupe"><circle cx="108" cy="178" r="44"/></clipPath>
+          </defs>
+
+          <!-- le seau et l'eau -->
+          <polygon points="203,190 517,190 490,350 230,350" fill="#bfe1e8"/>
+          <line x1="203" y1="190" x2="517" y2="190" stroke="#1a6f82" stroke-width="3"/>
+          <polyline points="190,110 230,350 490,350 530,110" fill="none" class="s-ink" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+
+          <!-- les flèches du cycle -->
+          <g fill="none" stroke="#1a6f82" stroke-width="2.5">
+            <path d="M216 176 Q252 150 292 184" marker-end="url(#fl)"/>
+            <path d="M342 262 Q374 268 398 238" marker-end="url(#fl)"/>
+            <path d="M432 196 Q470 122 536 94" marker-end="url(#fl)"/>
+            <path d="M546 58 Q380 4 228 150" stroke-dasharray="7 6" marker-end="url(#fl)"/>
+          </g>
+          <text x="384" y="24" class="lab" style="font-size:14px;fill:#1a6f82">la femelle pond</text>
+
+          <!-- stade 1 : les œufs -->
+          <g class="stage is-on">
+            <circle class="halo" cx="108" cy="178" r="60"/>
+            <g class="draw"><circle cx="108" cy="178" r="46" fill="#ffffff" class="s-ink" stroke-width="3"/>
+            <g clip-path="url(#clip-loupe)">
+              <rect x="60" y="202" width="100" height="40" fill="#bfe1e8"/>
+              <line x1="60" y1="202" x2="160" y2="202" stroke="#1a6f82" stroke-width="2"/>
+              <line x1="88" y1="124" x2="98" y2="232" class="s-ink" stroke-width="7"/>
+              <ellipse cx="102" cy="150" rx="4.5" ry="9" class="f-ink" transform="rotate(6 102 150)"/>
+              <ellipse cx="104" cy="170" rx="4.5" ry="9" class="f-ink" transform="rotate(6 104 170)"/>
+              <ellipse cx="114" cy="160" rx="4.5" ry="9" class="f-ink" transform="rotate(-8 114 160)"/>
+              <ellipse cx="106" cy="189" rx="4.5" ry="9" class="f-ink" transform="rotate(6 106 189)"/>
+            </g>
+            <line x1="153" y1="172" x2="200" y2="174" class="s-ink" stroke-width="2" stroke-dasharray="4 4"/>
+            <circle cx="207" cy="167" r="2" class="f-ink"/><circle cx="208" cy="174" r="2" class="f-ink"/><circle cx="209" cy="181" r="2" class="f-ink"/></g>
+            <circle cx="70" cy="138" r="13" class="f-ink"/><text x="70" y="143" class="num">1</text>
+            <text x="108" y="250" class="lab">Œufs</text>
+          </g>
+
+          <!-- stade 2 : la larve -->
+          <g class="stage">
+            <circle class="halo" cx="314" cy="232" r="54"/>
+            <g class="wig draw">
+              <line x1="297" y1="191" x2="301" y2="202" class="s-ink" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="302" cy="206" r="4" class="f-ink"/>
+              <circle cx="306" cy="216" r="5" class="f-ink"/>
+              <circle cx="311" cy="227" r="6" class="f-ink"/>
+              <circle cx="317" cy="239" r="7" class="f-ink"/>
+              <circle cx="324" cy="253" r="9" class="f-ink"/>
+              <circle cx="331" cy="267" r="6" class="f-ink"/>
+            </g>
+            <circle cx="276" cy="232" r="13" class="f-ink"/><text x="276" y="237" class="num">2</text>
+            <text x="314" y="312" class="lab">Larve</text>
+          </g>
+
+          <!-- stade 3 : la nymphe -->
+          <g class="stage">
+            <circle class="halo" cx="416" cy="224" r="44"/>
+            <g class="draw"><line x1="407" y1="201" x2="404" y2="191" class="s-ink" stroke-width="3" stroke-linecap="round"/>
+            <line x1="417" y1="200" x2="420" y2="191" class="s-ink" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="412" cy="213" r="13" class="f-ink"/>
+            <path d="M421 222 q16 14 2 28" fill="none" class="s-ink" stroke-width="8" stroke-linecap="round"/></g>
+            <circle cx="456" cy="216" r="13" class="f-ink"/><text x="456" y="221" class="num">3</text>
+            <text x="418" y="292" class="lab">Nymphe</text>
+          </g>
+
+          <!-- stade 4 : l'adulte -->
+          <g class="stage">
+            <circle class="halo" cx="592" cy="80" r="58"/>
+            <g class="draw" transform="translate(592 80)">
+              <g class="fly">
+                <ellipse cx="-4" cy="-17" rx="27" ry="8" fill="#ffffff" fill-opacity=".85" class="s-ink" stroke-width="1.5" transform="rotate(-24 -4 -17)"/>
+                <ellipse cx="2" cy="-20" rx="25" ry="7" fill="#ffffff" fill-opacity=".85" class="s-ink" stroke-width="1.5" transform="rotate(-50 2 -20)"/>
+                <ellipse cx="18" cy="8" rx="23" ry="6.5" class="f-ink" transform="rotate(20 18 8)"/>
+                <circle cx="-6" cy="0" r="9.5" class="f-ink"/>
+                <circle cx="-19" cy="-3" r="5.5" class="f-ink"/>
+                <line x1="-23" y1="-2" x2="-42" y2="8" class="s-ink" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M-9 7 l-10 16 l-7 12 M-4 9 l3 18 l8 13 M1 7 l14 15 l13 8" fill="none" class="s-ink" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </g>
+            </g>
+            <circle cx="652" cy="40" r="13" class="f-ink"/><text x="652" y="45" class="num">4</text>
+            <text x="592" y="158" class="lab">Adulte</text>
+          </g>
+        </svg>
+      </div>
+      <div class="caption">
+        <p class="jour" id="cycle-jour">Au départ</p>
+        <h3 id="cycle-titre">1. Les œufs</h3>
+        <p id="cycle-texte" aria-live="polite">La femelle colle ses œufs sur la paroi du seau, juste au-dessus de l'eau. Au sec, ils peuvent attendre jusqu'à 8 mois.</p>
+        <div class="row">
+          <button class="btn" id="cycle-prev" type="button">Stade précédent</button>
+          <button class="btn btn-primary" id="cycle-next" type="button">Stade suivant</button>
+          <button class="btn" id="cycle-play" type="button" aria-pressed="false">Lancer l'animation</button>
+        </div>
+      </div>
+    </div>
+    <p class="fact">De l'œuf à l'adulte : <strong>7 à 10 jours</strong> seulement.</p>
+  </div>
+</section>
+
+<!-- ÉTAPE 2 -->
+<section class="step" id="ordre" aria-labelledby="t-ordre">
+  <div class="step-num" aria-hidden="true">2</div>
+  <div class="step-body">
+    <h2 id="t-ordre">Remets les stades dans l'ordre</h2>
+    <p>Clique sur les quatre stades dans l'ordre de la vie du moustique. Commence par le tout premier.</p>
+    <div class="row" id="ordre-choix">
+      <button class="btn" type="button" data-stade="nymphe">Nymphe</button>
+      <button class="btn" type="button" data-stade="oeuf">Œuf</button>
+      <button class="btn" type="button" data-stade="adulte">Adulte</button>
+      <button class="btn" type="button" data-stade="larve">Larve</button>
+    </div>
+    <ol class="slots" id="ordre-slots" aria-label="Ton ordre">
+      <li><span>1er</span></li><li><span>2e</span></li><li><span>3e</span></li><li><span>4e</span></li>
+    </ol>
+    <div class="row">
+      <button class="btn btn-primary" type="button" id="ordre-check">Vérifier</button>
+      <button class="btn" type="button" id="ordre-reset">Recommencer</button>
+    </div>
+    <p class="fb" id="ordre-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ÉTAPE 3 -->
+<section class="step" id="vraifaux" aria-labelledby="t-vf">
+  <div class="step-num" aria-hidden="true">3</div>
+  <div class="step-body">
+    <h2 id="t-vf">Vrai ou faux ?</h2>
+    <p>Quatre phrases. Trois bonnes réponses donnent une étoile.</p>
+    <div class="vf" id="vf-liste">
+      <div class="vf-item" data-good="vrai" data-why="Oui. Sans eau, pas de larves.">
+        <p>Les larves de moustique vivent dans l'eau.</p>
+        <div class="row"><button class="btn" type="button" data-ans="vrai">Vrai</button><button class="btn" type="button" data-ans="faux">Faux</button></div>
+        <p class="fb" aria-live="polite"></p>
+      </div>
+      <div class="vf-item" data-good="faux" data-why="Seule la femelle pique. Elle a besoin de sang pour fabriquer ses œufs.">
+        <p>Le mâle et la femelle piquent tous les deux.</p>
+        <div class="row"><button class="btn" type="button" data-ans="vrai">Vrai</button><button class="btn" type="button" data-ans="faux">Faux</button></div>
+        <p class="fb" aria-live="polite"></p>
+      </div>
+      <div class="vf-item" data-good="faux" data-why="Les œufs peuvent attendre au sec jusqu'à 8 mois. Pour les enlever, il faut frotter la paroi.">
+        <p>Dans un seau vide et sec, les œufs meurent en quelques jours.</p>
+        <div class="row"><button class="btn" type="button" data-ans="vrai">Vrai</button><button class="btn" type="button" data-ans="faux">Faux</button></div>
+        <p class="fb" aria-live="polite"></p>
+      </div>
+      <div class="vf-item" data-good="vrai" data-why="C'est très rapide : environ une semaine.">
+        <p>Il faut 7 à 10 jours pour passer de l'œuf au moustique adulte.</p>
+        <div class="row"><button class="btn" type="button" data-ans="vrai">Vrai</button><button class="btn" type="button" data-ans="faux">Faux</button></div>
+        <p class="fb" aria-live="polite"></p>
+      </div>
+    </div>
+    <div class="row"><button class="btn" type="button" id="vf-reset">Recommencer</button></div>
+    <p class="fb" id="vf-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ÉTAPE 4 -->
+<section class="step" id="gites" aria-labelledby="t-gites">
+  <div class="step-num" aria-hidden="true">4</div>
+  <div class="step-body">
+    <h2 id="t-gites">Trouve les gîtes dans la cour</h2>
+    <p>Un gîte larvaire est un endroit où l'eau reste, et où les larves peuvent grandir. Sept objets sont entourés de pointillés. Clique sur ceux où l'eau peut rester : il y a 5 gîtes à trouver.</p>
+    <div class="card">
+      <div class="scroll">
+        <svg id="cour-svg" viewBox="0 0 720 340" role="group" aria-label="La cour : une maison et sept objets à examiner">
+          <rect x="0" y="0" width="720" height="210" fill="#e2f0f3"/>
+          <rect x="0" y="210" width="720" height="130" fill="#dbe7c9"/>
+          <!-- la maison -->
+          <rect x="24" y="70" width="246" height="150" fill="#fbf6e6" class="s-ink" stroke-width="3"/>
+          <polygon points="12,70 282,70 256,34 38,34" fill="#9a5a3c" class="s-ink" stroke-width="3" stroke-linejoin="round"/>
+          <rect x="52" y="112" width="52" height="52" fill="#bfe1e8" class="s-ink" stroke-width="3"/>
+          <line x1="78" y1="112" x2="78" y2="164" class="s-ink" stroke-width="2"/>
+          <rect x="268" y="80" width="10" height="140" fill="#8fa3a8" class="s-ink" stroke-width="2"/>
+
+          <!-- gouttière bouchée -->
+          <g class="spot" tabindex="0" role="button" aria-pressed="false" data-kind="gite" data-nom="La gouttière bouchée" data-geste="Des feuilles retiennent l'eau. Bon geste : la nettoyer pour que l'eau s'écoule." aria-label="Gouttière bouchée par des feuilles">
+            <rect x="12" y="66" width="270" height="14" fill="#8fa3a8" class="s-ink" stroke-width="2"/>
+            <rect x="120" y="68" width="110" height="6" fill="#6fb7c6"/>
+            <ellipse cx="150" cy="66" rx="12" ry="6" fill="#4f8f3a" class="s-ink" stroke-width="1.5"/>
+            <ellipse cx="170" cy="70" rx="12" ry="6" fill="#6aa84f" class="s-ink" stroke-width="1.5"/>
+            <ellipse cx="192" cy="65" rx="12" ry="6" fill="#4f8f3a" class="s-ink" stroke-width="1.5"/>
+            <rect class="ring" x="108" y="48" width="136" height="42" rx="10"/>
+          </g>
+
+          <!-- fût avec couvercle -->
+          <g class="spot" tabindex="0" role="button" aria-pressed="false" data-kind="sain" data-nom="Le fût avec son couvercle" data-geste="Pas de danger ici : le fût est couvert, les moustiques ne peuvent pas y pondre." aria-label="Fût bleu fermé par un couvercle">
+            <rect x="152" y="212" width="58" height="88" rx="6" fill="#2f6fa3" class="s-ink" stroke-width="2.5"/>
+            <line x1="152" y1="240" x2="210" y2="240" class="s-ink" stroke-width="2"/>
+            <line x1="152" y1="272" x2="210" y2="272" class="s-ink" stroke-width="2"/>
+            <ellipse cx="181" cy="212" rx="33" ry="9" fill="#1d4c73" class="s-ink" stroke-width="2.5"/>
+            <rect x="174" y="200" width="14" height="6" rx="2" fill="#1d4c73" class="s-ink" stroke-width="2"/>
+            <rect class="ring" x="138" y="190" width="86" height="120" rx="10"/>
+          </g>
+
+          <!-- seau retourné -->
+          <g class="spot" tabindex="0" role="button" aria-pressed="false" data-kind="sain" data-nom="Le seau retourné" data-geste="Pas de danger ici : le seau est retourné, l'eau ne peut pas y rester." aria-label="Seau retourné, le fond vers le haut">
+            <polygon points="262,276 298,276 308,318 252,318" fill="#e7edf0" class="s-ink" stroke-width="2.5" stroke-linejoin="round"/>
+            <line x1="262" y1="276" x2="298" y2="276" class="s-ink" stroke-width="4" stroke-linecap="round"/>
+            <rect class="ring" x="240" y="262" width="80" height="66" rx="10"/>
+          </g>
+
+          <!-- soucoupe sous le pot de fleurs -->
+          <g class="spot" tabindex="0" role="button" aria-pressed="false" data-kind="gite" data-nom="La soucoupe sous le pot de fleurs" data-geste="L'eau d'arrosage y reste. Bon geste : enlever la soucoupe, ou la vider chaque semaine." aria-label="Pot de fleurs posé sur une soucoupe pleine d'eau">
+            <ellipse cx="375" cy="286" rx="42" ry="9" fill="#6fb7c6" class="s-ink" stroke-width="2.5"/>
+            <polygon points="348,236 402,236 394,284 356,284" fill="#c8703f" class="s-ink" stroke-width="2.5" stroke-linejoin="round"/>
+            <line x1="375" y1="236" x2="375" y2="196" stroke="#4f8f3a" stroke-width="4"/>
+            <ellipse cx="362" cy="214" rx="13" ry="6" fill="#6aa84f" class="s-ink" stroke-width="1.5" transform="rotate(-25 362 214)"/>
+            <ellipse cx="388" cy="208" rx="13" ry="6" fill="#6aa84f" class="s-ink" stroke-width="1.5" transform="rotate(25 388 208)"/>
+            <circle cx="375" cy="190" r="10" fill="#bf3a1a" class="s-ink" stroke-width="2"/>
+            <rect class="ring" x="324" y="172" width="102" height="132" rx="10"/>
+          </g>
+
+          <!-- pneu -->
+          <g class="spot" tabindex="0" role="button" aria-pressed="false" data-kind="gite" data-nom="Le vieux pneu" data-geste="La pluie s'y accumule. Bon geste : le ranger à l'abri de la pluie, ou le porter à la déchetterie." aria-label="Vieux pneu couché, rempli d'eau de pluie">
+            <ellipse cx="490" cy="292" rx="50" ry="23" fill="#2b2b2b" class="s-ink" stroke-width="2.5"/>
+            <ellipse cx="490" cy="290" rx="28" ry="11" fill="#6fb7c6" class="s-ink" stroke-width="2"/>
+            <rect class="ring" x="430" y="260" width="120" height="64" rx="10"/>
+          </g>
+
+          <!-- seau plein -->
+          <g class="spot" tabindex="0" role="button" aria-pressed="false" data-kind="gite" data-nom="Le seau plein d'eau" data-geste="Bon geste : le vider, frotter la paroi, puis le retourner." aria-label="Seau posé à l'endroit, plein d'eau">
+            <polygon points="566,214 622,214 614,266 574,266" fill="#e7edf0" class="s-ink" stroke-width="2.5" stroke-linejoin="round"/>
+            <ellipse cx="594" cy="216" rx="27" ry="6" fill="#6fb7c6" class="s-ink" stroke-width="2"/>
+            <path d="M568 214 Q594 176 620 214" fill="none" class="s-ink" stroke-width="2.5"/>
+            <rect class="ring" x="554" y="182" width="80" height="94" rx="10"/>
+          </g>
+
+          <!-- fût ouvert -->
+          <g class="spot" tabindex="0" role="button" aria-pressed="false" data-kind="gite" data-nom="Le fût ouvert" data-geste="Il garde l'eau de pluie à l'air libre. Bon geste : le couvrir avec un couvercle ou une moustiquaire." aria-label="Fût bleu ouvert, rempli d'eau de pluie">
+            <rect x="646" y="130" width="58" height="96" rx="6" fill="#2f6fa3" class="s-ink" stroke-width="2.5"/>
+            <line x1="646" y1="160" x2="704" y2="160" class="s-ink" stroke-width="2"/>
+            <line x1="646" y1="194" x2="704" y2="194" class="s-ink" stroke-width="2"/>
+            <ellipse cx="675" cy="131" rx="29" ry="8" fill="#6fb7c6" class="s-ink" stroke-width="2.5"/>
+            <rect class="ring" x="636" y="112" width="78" height="124" rx="10"/>
+          </g>
+        </svg>
+      </div>
+      <p class="count">Gîtes trouvés : <span id="gites-n">0</span> sur 5</p>
+    </div>
+    <p class="fb" id="gites-fb" aria-live="polite">Clique sur un objet pour l'examiner.</p>
+  </div>
+</section>
+
+<!-- ÉTAPE 5 -->
+<section class="step" id="semaine" aria-labelledby="t-semaine">
+  <div class="step-num" aria-hidden="true">5</div>
+  <div class="step-body">
+    <h2 id="t-semaine">Teste la règle de la semaine</h2>
+    <p>Le premier jour, la pluie recouvre des œufs dans un seau. Tu décides de vider l'eau : tous les combien de jours ? Déplace le curseur et regarde ce qui se passe.</p>
+    <div class="card">
+      <div class="days" id="days" aria-hidden="true"></div>
+      <ul class="legend">
+        <li><i style="background:#d3ebef"></i>dans l'eau</li>
+        <li><i style="background:#f5c62f"></i>dernier moment</li>
+        <li><i style="background:#f3b79f"></i>premiers adultes</li>
+        <li><i style="background:#bf3a1a"></i>tous envolés</li>
+      </ul>
+      <div class="slider">
+        <label for="sem-range">Je vide l'eau tous les</label>
+        <input type="range" id="sem-range" min="1" max="14" step="1" value="12">
+        <output id="sem-out" for="sem-range">12 jours</output>
+      </div>
+      <div class="row"><button class="btn btn-primary" type="button" id="sem-check">Valider mon choix</button></div>
+    </div>
+    <p class="fb" id="sem-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ÉTAPE 6 -->
+<section class="step" id="enquete" aria-labelledby="t-enquete">
+  <div class="step-num" aria-hidden="true">6</div>
+  <div class="step-body">
+    <h2 id="t-enquete">Mène l'enquête dans la cour de l'école</h2>
+    <ol>
+      <li>Par équipe, avec un adulte, cherche les objets qui retiennent l'eau.</li>
+      <li>Note chaque objet dans le tableau.</li>
+      <li>Choisis le bon geste : vider, retourner, couvrir, ranger à l'abri ou jeter.</li>
+      <li>Compare avec les autres équipes : combien de gîtes dans la cour ?</li>
+    </ol>
+    <p class="safety">Ne touche pas les déchets à main nue. Lave-toi les mains après l'enquête.</p>
+    <div class="scroll">
+      <table class="fiche">
+        <caption style="text-align:left;font-weight:700;padding-bottom:6px">Fiche d'enquête de l'équipe</caption>
+        <thead>
+          <tr><th scope="col">Où ?</th><th scope="col">Quel objet ?</th><th scope="col">De l'eau ?</th><th scope="col">Des larves ?</th><th scope="col">Notre geste</th></tr>
+        </thead>
+        <tbody id="fiche-body"></tbody>
+      </table>
+    </div>
+    <div class="row">
+      <button class="btn" type="button" id="print-btn">Imprimer la fiche</button>
+    </div>
+    <p id="print-note" hidden>Pour imprimer la fiche, ouvre le fichier de cette page dans ton navigateur.</p>
+  </div>
+</section>
+
+<!-- ÉTAPE 7 -->
+<section class="step" id="quiz" aria-labelledby="t-quiz">
+  <div class="step-num" aria-hidden="true">7</div>
+  <div class="step-body">
+    <h2 id="t-quiz">Le quiz final</h2>
+    <p>Trois questions. Tu peux recommencer autant de fois que tu veux.</p>
+    <form class="quiz" id="quiz-form">
+      <fieldset data-good="b">
+        <legend>Où la femelle pond-elle ses œufs ?</legend>
+        <label><input type="radio" name="q1" id="q1a" value="a">Dans la terre sèche</label>
+        <label><input type="radio" name="q1" id="q1b" value="b">Sur la paroi d'un récipient, juste au-dessus de l'eau</label>
+        <label><input type="radio" name="q1" id="q1c" value="c">Sur les feuilles des arbres</label>
+        <p class="fb" aria-live="polite"></p>
+      </fieldset>
+      <fieldset data-good="c">
+        <legend>Pourquoi la femelle pique-t-elle ?</legend>
+        <label><input type="radio" name="q2" id="q2a" value="a">Pour se défendre</label>
+        <label><input type="radio" name="q2" id="q2b" value="b">Pour boire de l'eau</label>
+        <label><input type="radio" name="q2" id="q2c" value="c">Pour fabriquer ses œufs</label>
+        <p class="fb" aria-live="polite"></p>
+      </fieldset>
+      <fieldset data-good="a">
+        <legend>Quel est le meilleur moyen d'avoir moins de moustiques ?</legend>
+        <label><input type="radio" name="q3" id="q3a" value="a">Supprimer chaque semaine l'eau qui reste dans les objets</label>
+        <label><input type="radio" name="q3" id="q3b" value="b">Arroser le jardin plus souvent</label>
+        <label><input type="radio" name="q3" id="q3c" value="c">Laisser les seaux dehors sous la pluie</label>
+        <p class="fb" aria-live="polite"></p>
+      </fieldset>
+      <div class="row"><button class="btn btn-primary" type="submit" id="quiz-check">Vérifier mes réponses</button></div>
+    </form>
+    <p class="fb" id="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- BILAN -->
+<section class="step bilan" id="bilan" aria-labelledby="t-bilan">
+  <div class="step-num" aria-hidden="true">8</div>
+  <div class="step-body">
+    <h2 id="t-bilan">Ce que je retiens</h2>
+    <ul>
+      <li>Le moustique passe par quatre stades : œuf, larve, nymphe, adulte.</li>
+      <li>Les larves et les nymphes vivent dans l'eau qui ne bouge pas.</li>
+      <li>Chaque semaine, je vide, je retourne ou je couvre tout ce qui retient l'eau.</li>
+    </ul>
+    <p class="fb" id="bilan-msg" aria-live="polite">Il te reste 5 étoiles à gagner.</p>
+  </div>
+</section>
+
+</main>
+
+<footer class="teacher wrap" id="enseignant">
+  <h2>Pour l'enseignant</h2>
+  <dl>
+    <dt>Niveau</dt><dd>Cycle 3 : CM1, CM2, 6e. Au lycée, la page sert d'accroche avant d'étudier la transmission de la dengue.</dd>
+    <dt>Durée</dt><dd>45 minutes sur écran, puis l'enquête dans la cour.</dd>
+    <dt>Objectifs</dt><dd>Décrire le cycle de vie d'un insecte. Relier ce cycle à un geste de prévention.</dd>
+    <dt>Sources</dt><dd>Faits vérifiés le 17 novembre 2026 : <a href="https://www.cdc.gov/mosquitoes/about/life-cycles/aedes.html">CDC, cycle de vie des moustiques Aedes</a> ; <a href="https://www.cdc.gov/mosquitoes/mosquito-control/mosquito-control-at-home.html">CDC, lutte contre les moustiques à la maison</a> ; <a href="https://www.pasteur.fr/fr/centre-medical/fiches-maladies/dengue">Institut Pasteur, fiche dengue</a> ; <a href="https://www.guyane.ars.sante.fr/media/6818/download">ARS Guyane, dépliant de prévention (2016)</a> ; <a href="https://www.ac-guyane.fr/media/30524/download">académie de Guyane, kit « Maladies transmises par les moustiques »</a>.</dd>
+    <dt>Écarts</dt><dd>Les sources ne disent pas toutes la même chose. Le kit de l'académie décrit trois stades et une ponte à la surface de l'eau. Cette page suit le CDC : quatre stades, œufs collés sur la paroi. Elle n'emploie pas le nom « moustique tigre », que l'Institut Pasteur donne à <em>Aedes albopictus</em>.</dd>
+    <dt>Fabrication</dt><dd>Page produite avec une IA générative, puis relue. Relisez-la avant de l'utiliser en classe.</dd>
+    <dt>Données</dt><dd>La page ne demande aucun nom, n'enregistre rien et ne charge aucune ressource extérieure. Elle fonctionne sans connexion.</dd>
+  </dl>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+  function $(id) { return document.getElementById(id); }
+  function all(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
+  function setFb(el, text, state) {
+    el.textContent = text;
+    el.classList.remove('ok', 'no');
+    if (state) { el.classList.add(state); }
+  }
+
+  /* ---------- Les étoiles ---------- */
+  var stars = { ordre: false, vraifaux: false, gites: false, semaine: false, quiz: false };
+  function renderStars() {
+    var n = 0;
+    Object.keys(stars).forEach(function (k) { if (stars[k]) { n += 1; } });
+    all('[data-star]').forEach(function (el) { el.classList.toggle('on', stars[el.getAttribute('data-star')]); });
+    all('.js-star-count').forEach(function (el) { el.textContent = String(n); });
+    var left = 5 - n;
+    if (left === 0) {
+      setFb($('bilan-msg'), 'Mission réussie : 5 étoiles sur 5. Tu fais partie de la brigade anti-moustique.', 'ok');
+    } else {
+      setFb($('bilan-msg'), 'Il te reste ' + left + (left > 1 ? ' étoiles' : ' étoile') + ' à gagner.', null);
+    }
+  }
+  function giveStar(id) { if (!stars[id]) { stars[id] = true; renderStars(); } }
+
+  /* ---------- Étape 1 : le cycle ---------- */
+  var STAGES = [
+    { jour: 'Au départ', titre: '1. Les œufs', texte: "La femelle colle ses œufs sur la paroi du seau, juste au-dessus de l'eau. Au sec, ils peuvent attendre jusqu'à 8 mois." },
+    { jour: "Quand l'eau monte", titre: '2. La larve', texte: "Quand l'eau recouvre les œufs, les larves sortent. Elles vivent dans l'eau et bougent beaucoup." },
+    { jour: 'Quelques jours plus tard', titre: '3. La nymphe', texte: "La larve devient une nymphe. Elle vit encore dans l'eau, mais elle ne mange plus." },
+    { jour: "7 à 10 jours après l'œuf", titre: "4. L'adulte", texte: "Le moustique adulte sort de l'eau et s'envole. Seule la femelle pique : elle a besoin de sang pour fabriquer ses œufs." }
+  ];
+  var stageEls = all('#cycle-svg .stage');
+  var cur = 0;
+  var timer = null;
+  function showStage(i) {
+    cur = (i + STAGES.length) % STAGES.length;
+    stageEls.forEach(function (g, idx) { g.classList.toggle('is-on', idx === cur); });
+    $('cycle-jour').textContent = STAGES[cur].jour;
+    $('cycle-titre').textContent = STAGES[cur].titre;
+    $('cycle-texte').textContent = STAGES[cur].texte;
+  }
+  function stopPlay() {
+    if (timer) { window.clearInterval(timer); timer = null; }
+    $('cycle-play').textContent = "Lancer l'animation";
+    $('cycle-play').setAttribute('aria-pressed', 'false');
+  }
+  $('cycle-prev').addEventListener('click', function () { stopPlay(); showStage(cur - 1); });
+  $('cycle-next').addEventListener('click', function () { stopPlay(); showStage(cur + 1); });
+  $('cycle-play').addEventListener('click', function () {
+    if (timer) { stopPlay(); return; }
+    $('cycle-play').textContent = "Arrêter l'animation";
+    $('cycle-play').setAttribute('aria-pressed', 'true');
+    timer = window.setInterval(function () { showStage(cur + 1); }, 2800);
+  });
+
+  /* ---------- Étape 2 : l'ordre ---------- */
+  var ORDER = ['oeuf', 'larve', 'nymphe', 'adulte'];
+  var NAMES = { oeuf: 'Œuf', larve: 'Larve', nymphe: 'Nymphe', adulte: 'Adulte' };
+  var RANKS = ['1er', '2e', '3e', '4e'];
+  var picked = [];
+  var slotEls = all('#ordre-slots li');
+  function renderSlots() {
+    slotEls.forEach(function (li, i) {
+      li.innerHTML = '';
+      var tag = document.createElement('span');
+      tag.textContent = RANKS[i];
+      li.appendChild(tag);
+      if (picked[i]) { li.appendChild(document.createTextNode(NAMES[picked[i]])); }
+      li.classList.toggle('full', Boolean(picked[i]));
+    });
+  }
+  all('#ordre-choix [data-stade]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      if (picked.length >= 4) { return; }
+      picked.push(b.getAttribute('data-stade'));
+      b.disabled = true;
+      renderSlots();
+    });
+  });
+  $('ordre-check').addEventListener('click', function () {
+    if (picked.length < 4) { setFb($('ordre-fb'), "Choisis d'abord les quatre stades.", null); return; }
+    var good = picked.every(function (s, i) { return s === ORDER[i]; });
+    if (good) {
+      setFb($('ordre-fb'), 'Bravo ! Œuf, larve, nymphe, adulte : tu connais le cycle de vie du moustique.', 'ok');
+      giveStar('ordre');
+    } else {
+      setFb($('ordre-fb'), "Pas encore. Regarde à nouveau l'animation de l'étape 1, puis recommence.", 'no');
+    }
+  });
+  $('ordre-reset').addEventListener('click', function () {
+    picked = [];
+    all('#ordre-choix [data-stade]').forEach(function (b) { b.disabled = false; });
+    renderSlots();
+    setFb($('ordre-fb'), '', null);
+  });
+
+  /* ---------- Étape 3 : vrai ou faux ---------- */
+  var vfItems = all('#vf-liste .vf-item');
+  var vfDone = 0;
+  var vfGood = 0;
+  vfItems.forEach(function (item) {
+    all('[data-ans]', item).forEach(function (b) {
+      b.addEventListener('click', function () {
+        var ok = b.getAttribute('data-ans') === item.getAttribute('data-good');
+        all('[data-ans]', item).forEach(function (x) { x.disabled = true; });
+        setFb(item.querySelector('.fb'), (ok ? 'Bonne réponse. ' : "Ce n'est pas ça. ") + item.getAttribute('data-why'), ok ? 'ok' : 'no');
+        vfDone += 1;
+        if (ok) { vfGood += 1; }
+        if (vfDone === vfItems.length) {
+          if (vfGood >= 3) {
+            setFb($('vf-fb'), 'Tu as ' + vfGood + ' bonnes réponses sur 4. Étoile gagnée.', 'ok');
+            giveStar('vraifaux');
+          } else {
+            setFb($('vf-fb'), 'Tu as ' + vfGood + ' bonnes réponses sur 4. Lis les explications, puis recommence.', 'no');
+          }
+        }
+      });
+    });
+  });
+  $('vf-reset').addEventListener('click', function () {
+    vfDone = 0; vfGood = 0;
+    vfItems.forEach(function (item) {
+      all('[data-ans]', item).forEach(function (x) { x.disabled = false; });
+      setFb(item.querySelector('.fb'), '', null);
+    });
+    setFb($('vf-fb'), '', null);
+  });
+
+  /* ---------- Étape 4 : les gîtes ---------- */
+  var found = 0;
+  function examine(spot) {
+    var isGite = spot.getAttribute('data-kind') === 'gite';
+    var msg = spot.getAttribute('data-nom') + '. ' + spot.getAttribute('data-geste');
+    if (isGite) {
+      if (!spot.classList.contains('found')) {
+        spot.classList.add('found');
+        spot.setAttribute('aria-pressed', 'true');
+        found += 1;
+        $('gites-n').textContent = String(found);
+      }
+      if (found === 5) {
+        setFb($('gites-fb'), msg + ' Tu as trouvé les 5 gîtes. Étoile gagnée.', 'ok');
+        giveStar('gites');
+      } else {
+        setFb($('gites-fb'), "C'est un gîte. " + msg, 'no');
+      }
+    } else {
+      spot.classList.add('safe');
+      spot.setAttribute('aria-pressed', 'true');
+      setFb($('gites-fb'), msg, 'ok');
+    }
+  }
+  all('#cour-svg .spot').forEach(function (spot) {
+    spot.addEventListener('click', function () { examine(spot); });
+    spot.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); examine(spot); }
+    });
+  });
+
+  /* ---------- Étape 5 : la règle de la semaine ---------- */
+  var daysBox = $('days');
+  var d;
+  for (d = 1; d <= 14; d += 1) {
+    var cell = document.createElement('div');
+    cell.className = 'day ' + (d <= 6 ? 'eau' : d === 7 ? 'limite' : d <= 10 ? 'risque' : 'envol');
+    cell.textContent = String(d);
+    daysBox.appendChild(cell);
+  }
+  function semMessage(n) {
+    if (n <= 6) { return { t: "Cycle cassé. Les larves n'ont pas le temps de devenir des moustiques adultes. Pense aussi à frotter la paroi : des œufs y restent collés.", s: 'ok' }; }
+    if (n === 7) { return { t: "Juste à temps. Une fois par semaine, c'est le rythme à tenir. Pense aussi à frotter la paroi : des œufs y restent collés.", s: 'ok' }; }
+    if (n <= 10) { return { t: 'Attention. Les larves les plus rapides sont déjà devenues des moustiques.', s: 'no' }; }
+    return { t: 'Trop tard. Les moustiques adultes se sont envolés.', s: 'no' };
+  }
+  function renderSem() {
+    var n = Number($('sem-range').value);
+    $('sem-out').textContent = n + (n > 1 ? ' jours' : ' jour');
+    all('.day', daysBox).forEach(function (c, i) { c.classList.toggle('pick', i + 1 === n); });
+    var m = semMessage(n);
+    setFb($('sem-fb'), 'Si tu vides tous les ' + n + (n > 1 ? ' jours' : ' jour') + ' : ' + m.t, m.s);
+    return n;
+  }
+  $('sem-range').addEventListener('input', renderSem);
+  $('sem-check').addEventListener('click', function () {
+    var n = renderSem();
+    if (n <= 7) {
+      setFb($('sem-fb'), 'Choix validé : tous les ' + n + (n > 1 ? ' jours' : ' jour') + '. ' + semMessage(n).t + ' Étoile gagnée.', 'ok');
+      giveStar('semaine');
+    }
+  });
+
+  /* ---------- Étape 6 : la fiche d'enquête ---------- */
+  var body = $('fiche-body');
+  function makeSelect(id, label, options) {
+    var s = document.createElement('select');
+    s.id = id;
+    s.setAttribute('aria-label', label);
+    options.forEach(function (o) {
+      var opt = document.createElement('option');
+      opt.textContent = o;
+      s.appendChild(opt);
+    });
+    return s;
+  }
+  function makeInput(id, label) {
+    var i = document.createElement('input');
+    i.type = 'text';
+    i.id = id;
+    i.setAttribute('aria-label', label);
+    i.autocomplete = 'off';
+    return i;
+  }
+  var r;
+  for (r = 1; r <= 10; r += 1) {
+    var tr = document.createElement('tr');
+    if (r > 5) { tr.className = 'extra'; }
+    var cells = [
+      makeInput('enq-' + r + '-lieu', 'Ligne ' + r + ' : où ?'),
+      makeInput('enq-' + r + '-objet', 'Ligne ' + r + ' : quel objet ?'),
+      makeSelect('enq-' + r + '-eau', "Ligne " + r + " : de l'eau ?", ['', 'oui', 'non']),
+      makeSelect('enq-' + r + '-larves', 'Ligne ' + r + ' : des larves ?', ['', 'oui', 'non']),
+      makeSelect('enq-' + r + '-geste', 'Ligne ' + r + ' : notre geste', ['', 'vider', 'retourner', 'couvrir', "ranger à l'abri", 'jeter'])
+    ];
+    cells.forEach(function (c) {
+      var td = document.createElement('td');
+      td.appendChild(c);
+      tr.appendChild(td);
+    });
+    body.appendChild(tr);
+  }
+  var framed = false;
+  try { framed = window.self !== window.top; } catch (e) { framed = true; }
+  if (framed) {
+    $('print-btn').hidden = true;
+    $('print-note').hidden = false;
+  } else {
+    $('print-btn').addEventListener('click', function () {
+      try { window.print(); } catch (e) { $('print-note').hidden = false; }
+    });
+  }
+
+  /* ---------- Étape 7 : le quiz ---------- */
+  var WHY = {
+    q1: "Les œufs sont collés sur la paroi, juste au-dessus de l'eau.",
+    q2: 'La femelle a besoin de sang pour fabriquer ses œufs.',
+    q3: "Sans eau qui reste, les larves ne peuvent pas grandir."
+  };
+  $('quiz-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var sets = all('#quiz-form fieldset');
+    var missing = sets.some(function (fs) { return !fs.querySelector('input:checked'); });
+    if (missing) { setFb($('quiz-fb'), "Réponds d'abord aux trois questions.", null); return; }
+    var good = 0;
+    sets.forEach(function (fs) {
+      var chosen = fs.querySelector('input:checked');
+      var ok = chosen.value === fs.getAttribute('data-good');
+      if (ok) { good += 1; }
+      setFb(fs.querySelector('.fb'), ok ? 'Bonne réponse. ' + WHY[chosen.name] : "Ce n'est pas ça. Relis l'étape qui en parle, puis change ta réponse.", ok ? 'ok' : 'no');
+    });
+    if (good === 3) {
+      setFb($('quiz-fb'), '3 bonnes réponses sur 3. Étoile gagnée.', 'ok');
+      giveStar('quiz');
+    } else {
+      setFb($('quiz-fb'), good + (good > 1 ? ' bonnes réponses' : ' bonne réponse') + ' sur 3. Corrige, puis vérifie à nouveau.', 'no');
+    }
+  });
+
+  /* ---------- Démarrage ---------- */
+  renderSlots();
+  renderSem();
+  renderStars();
+}());
+</script>
+</body>
+</html>
