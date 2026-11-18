@@ -1,186 +1,116 @@
-# TP - Matrix en Python (30 à 45 min)
+TP - Matrix en Python
 
-## Objectif
+Durée : 30 à 45 minutes
 
-Créer et exécuter une animation inspirée du film *The Matrix*, puis la personnaliser.
+Objectif
 
----
+Créer et exécuter une animation inspirée du film The Matrix, puis la personnaliser.
 
-## Étape 1 - Installer Python
+Étape 1 - Installer Python
 
 Télécharger Python :
 
 https://www.python.org/downloads/
 
-Pendant l'installation, cocher impérativement :
+Pendant l'installation, cocher :
 
-```text
+Plain Text
 ☑ Add Python to PATH
-```
 
 Puis cliquer sur :
 
-```text
+Plain Text
 Install Now
-```
+Étape 2 - Vérifier l'installation
 
----
-
-## Étape 2 - Vérifier l'installation
-
-Ouvrir l'invite de commandes (CMD).
+Ouvrir l'invite de commandes.
 
 Exécuter :
 
-```cmd
+BAT
 python --version
-```
+ 
 
 Résultat attendu :
 
-```text
+Plain Text
 Python 3.x.x
-```
 
 Faire une capture d'écran du résultat.
 
----
+Étape 3 - Créer le programme
 
-## Étape 3 - Créer le programme
+Créer un fichier nommé :
 
-Créer un fichier :
-
-```text
+Plain Text
 matrix_v4.py
-```
 
-Copier-coller le code fourni par l'enseignant.
+Ouvrir le fichier avec le Bloc-notes, Visual Studio Code ou Notepad++.
 
-Enregistrer le fichier.
+Copier-coller le code Matrix V4 fourni par l'enseignant dans le fichier puis enregistrer.
 
----
+Étape 4 - Exécuter le programme
 
-## Étape 4 - Exécuter le programme
+Ouvrir une invite de commandes dans le dossier contenant matrix_v4.py.
 
-Dans l'invite de commandes :
+Exécuter :
 
-```cmd
+BAT
 python matrix_v4.py
-```
+ 
 
-L'animation Matrix doit s'afficher.
+L'animation Matrix doit apparaître.
 
-Pour fermer l'application :
+Pour quitter :
 
-```text
+Plain Text
 Appuyer sur la barre ESPACE
-```
 
 Faire une capture d'écran du programme en fonctionnement.
 
----
+Étape 5 - Personnalisation
 
-## Étape 5 - Personnalisation
+Dans le fichier matrix_v4.py, rechercher :
 
-Modifier les messages suivants :
-
-```python
+Python
 messages = [
-    "Wake up Neo...",
-    "The Matrix has you...",
-    "Follow the white rabbit.",
-    "Knock, knock, Neo."
+"Wake up Neo...",
+"The Matrix has you...",
+"Follow the white rabbit.",
+"Knock, knock, Neo."
 ]
-```
 
-Par votre propre version.
+Modifier ces messages avec votre propre version.
 
 Exemple :
 
-```python
+Python
 messages = [
-    "Bienvenue",
-    "Université de Guyane",
-    "Licence Informatique",
-    "Découvrons Python"
+"Bienvenue",
+"Université de Guyane",
+"Licence Informatique",
+"Découvrons Python"
 ]
-```
 
-Faire une nouvelle capture d'écran.
+Faire une nouvelle capture d'écran après modification.
 
----
-
-## Questions
-
-### Question 1
+Questions
+Question 1
 
 Quelle commande permet de vérifier que Python est correctement installé ?
 
-### Question 2
+Question 2
 
-À quoi sert la bibliothèque `tkinter` ?
+À quoi sert la bibliothèque tkinter ?
 
-### Question 3
+Question 3
 
-Quelle touche permet de quitter l'application Matrix ?
+Quelle touche permet de quitter l'application ?
 
-### Question 4
+Question 4
 
 Quelle modification avez-vous réalisée dans le programme ?
 
-### Question 5
+Question 5
 
-Quelle fonctionnalité ou amélioration souhaiteriez-vous ajouter ?
-
----
-
-## Travail à rendre sur GitHub
-
-Créer un dépôt GitHub contenant :
-
-```text
-tp-matrix-python/
-│
-├── README.md
-├── matrix_v4.py
-├── capture_installation.png
-├── capture_matrix.png
-└── reponses.md
-```
-
-### README.md
-
-Décrire en quelques lignes le projet réalisé.
-
-### matrix_v4.py
-
-Le programme Python modifié.
-
-### capture_installation.png
-
-Capture d'écran de la commande :
-
-```cmd
-python --version
-```
-
-### capture_matrix.png
-
-Capture d'écran de votre version personnalisée du projet.
-
-### reponses.md
-
-Réponses aux 5 questions.
-
----
-
-## Barème
-
-| Critère | Points |
-|----------|---------:|
-| Installation de Python | 4 |
-| Exécution du programme | 4 |
-| Personnalisation du programme | 6 |
-| Réponses aux questions | 6 |
-
-**Total : 20 points**
+Quelle amélioration souhaiteriez-vous ajouter au projet ?
