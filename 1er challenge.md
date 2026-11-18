@@ -32,7 +32,7 @@ Puis cliquer sur :
 
 Plain Text
 Install Now
-Étape 2 - Vérifier l'installation
+# Étape 2 - Vérifier l'installation
 
 Ouvrir l'invite de commandes.
 
