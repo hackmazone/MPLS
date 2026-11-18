@@ -25,13 +25,13 @@ https://www.python.org/downloads/
 
 Pendant l'installation, cocher :
 
-```text
 ☑ Add Python to PATH
 
 Puis cliquer sur :
 
 Plain Text
 Install Now
+
 # Étape 2 - Vérifier l'installation
 
 Ouvrir l'invite de commandes.
